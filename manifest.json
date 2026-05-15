@@ -5,7 +5,7 @@
   "start_url": "./badminton.html",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#1976d2",
+  "theme_color": "#2e7d32",
   "background_color": "#f0f4f8",
   "icons": [
     {
