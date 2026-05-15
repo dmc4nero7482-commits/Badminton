@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏸 羽毛球排場系統</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1976d2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="羽球排場">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <style>
+        :root {
+            --primary: #1976d2;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #212121;
+            --text-light: #757575;
+            --border: #e0e0e0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+        .court-ctrl { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .btn-circle {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.7);
+            background: transparent;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            transition: background 0.15s;
+        }
+        .btn-circle:hover { background: rgba(255,255,255,0.2); }
+        .court-num { font-size: 18px; font-weight: 700; min-width: 20px; text-align: center; }
+
+        .container { padding: 12px; max-width: 1200px; margin: 0 auto; }
+
+        .courts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .court-card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border-top: 5px solid #2196F3;
+        }
+        .court-title {
+            font-size: 13px; font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .team { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .vs-divider {
+            display: flex; align-items: center; gap: 6px;
+            margin: 8px 0;
+            color: var(--text-light);
+            font-size: 11px; font-weight: 700;
+        }
+        .vs-divider::before, .vs-divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+        .slot {
+            min-height: 40px;
+            border-radius: 8px;
+            border: 2px dashed #90caf9;
+            background: #e3f2fd;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 600;
+            color: #1565c0;
+            transition: all 0.15s;
+            padding: 4px 6px;
+            text-align: center;
+        }
+        .slot.filled { border: 2px solid #64b5f6; background: #bbdefb; }
+        .slot.manual-empty {
+            cursor: pointer;
+            border-color: #a5d6a7; background: #e8f5e9; color: #2e7d32;
+        }
+        .slot.manual-empty:hover { background: #c8e6c9; }
+        .slot.manual-filled { cursor: pointer; }
+        .slot.manual-filled:hover { background: #ffcdd2; border-color: #ef9a9a; }
+
+        .section {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .section-title { font-size: 15px; font-weight: 700; }
+        .badge {
+            background: var(--primary); color: white;
+            border-radius: 12px; padding: 2px 10px;
+            font-size: 12px; font-weight: 600;
+        }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip {
+            border-radius: 20px; padding: 6px 10px;
+            font-size: 13px; font-weight: 500;
+            display: flex; align-items: center; gap: 5px;
+            border: 1.5px solid var(--border); background: #fafafa;
+        }
+        .chip.waiting { background: #fff8e1; border-color: #ffe082; }
+        .chip.playing { background: #e8f5e9; border-color: #a5d6a7; }
+        .chip-count {
+            background: #bdbdbd; color: white;
+            border-radius: 10px; padding: 1px 7px; font-size: 11px;
+        }
+        .chip-remove {
+            color: #bdbdbd; font-size: 17px; line-height: 1;
+            cursor: pointer; transition: color 0.15s;
+        }
+        .chip-remove:hover { color: var(--danger); }
+        .empty-hint { color: var(--text-light); font-size: 13px; padding: 6px 0; }
+
+        .add-form { display: flex; gap: 8px; margin-top: 12px; }
+        .add-form input {
+            flex: 1; border: 1.5px solid var(--border);
+            border-radius: 8px; padding: 9px 12px;
+            font-size: 14px; outline: none; transition: border-color 0.15s;
+        }
+        .add-form input:focus { border-color: var(--primary); }
+
+        .btn {
+            padding: 10px 14px; border-radius: 9px; border: none;
+            font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; text-align: center;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1565c0; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover:not(:disabled) { background: #2e7d32; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover:not(:disabled) { background: #e65100; }
+        .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover:not(:disabled) { background: #e3f2fd; }
+        .btn-outline.active { background: var(--primary); color: white; }
+
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 10px 12px;
+            display: flex; gap: 8px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .action-bar .btn { flex: 1; font-size: 13px; padding: 10px 6px; }
+
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .overlay.show { display: flex; }
+        .modal {
+            background: white; border-radius: 16px;
+            padding: 20px; width: 100%; max-width: 380px;
+            max-height: 80vh; overflow-y: auto;
+        }
+        .modal h3 { font-size: 15px; margin-bottom: 14px; }
+        .modal-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .mchip {
+            padding: 8px 14px; border-radius: 20px;
+            border: 2px solid var(--border);
+            font-size: 14px; cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .mchip:hover { border-color: var(--primary); background: #e3f2fd; }
+        .modal-btns { display: flex; gap: 8px; }
+        .modal-btns .btn { flex: 1; }
+
+        .toast {
+            position: fixed; top: 72px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(33,33,33,0.9); color: white;
+            padding: 10px 20px; border-radius: 24px;
+            font-size: 13px; z-index: 999;
+            opacity: 0; transition: opacity 0.25s;
+            white-space: nowrap; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 16px; }
+            .action-bar .btn { font-size: 12px; }
+            .courts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🏸 羽毛球排場</h1>
+    <div class="court-ctrl">
+        <span>場地</span>
+        <button class="btn-circle" onclick="changeCourts(-1)">−</button>
+        <span class="court-num" id="courtNum">2</span>
+        <button class="btn-circle" onclick="changeCourts(1)">+</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="courts-grid" id="courtsGrid"></div>
+
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">⏳ 等待上場</span>
+            <span class="badge" id="waitBadge">0</span>
+        </div>
+        <div class="chips" id="waitList"><span class="empty-hint">目前沒有等待的球員</span></div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">👥 球員名單</span>
+            <span class="badge" id="playerBadge">0</span>
+        </div>
+        <div class="chips" id="playerList"><span class="empty-hint">尚未新增球員</span></div>
+        <div class="add-form">
+            <input id="nameInput" type="text" placeholder="輸入球員姓名，按 Enter 新增"
+                   onkeydown="if(event.key==='Enter')addPlayer()">
+            <button class="btn btn-primary" onclick="addPlayer()">新增</button>
+        </div>
+    </div>
+</div>
+
+<div class="action-bar">
+    <button class="btn btn-primary" onclick="randomAssign()">🎲 隨機排場</button>
+    <button class="btn btn-outline" id="manualBtn" onclick="toggleManual()">✋ 手動排場</button>
+    <button class="btn btn-success" onclick="nextRound()">⏭ 下一輪</button>
+    <button class="btn btn-warning" onclick="clearAll()">🔄 清空</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+    <div class="modal">
+        <h3 id="modalTitle">選擇球員</h3>
+        <div class="modal-chips" id="modalChips"></div>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COLORS = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#F44336','#00BCD4','#795548','#607D8B'];
+
+let players = [];
+let courts = [];
+let courtCount = 2;
+let nextId = 1;
+let manualMode = false;
+let pendingSlot = null;
+
+function saveData() {
+    localStorage.setItem('badminton', JSON.stringify({ players, courts, courtCount, nextId }));
+}
+
+function loadData() {
+    try {
+        const d = JSON.parse(localStorage.getItem('badminton'));
+        if (d) { players = d.players; courts = d.courts; courtCount = d.courtCount; nextId = d.nextId; return; }
+    } catch(e) {}
+    for (let i = 0; i < courtCount; i++) courts.push([null,null,null,null]);
+}
+
+loadData();
+render();
+
+function changeCourts(d) {
+    const n = courtCount + d;
+    if (n < 1 || n > 10) return;
+    if (d < 0) {
+        courts[courtCount-1].forEach(pid => { if (pid) setOnCourt(pid, false); });
+        courts.pop();
+    } else {
+        courts.push([null,null,null,null]);
+    }
+    courtCount = n;
+    render(); saveData();
+}
+
+function addPlayer() {
+    const inp = document.getElementById('nameInput');
+    const name = inp.value.trim();
+    if (!name) { toast('請輸入球員姓名'); return; }
+    if (players.find(p => p.name === name)) { toast('球員名稱重複'); return; }
+    players.push({ id: nextId++, name, playCount: 0, onCourt: false });
+    inp.value = '';
+    render(); saveData();
+}
+
+function removePlayer(id) {
+    const p = players.find(p => p.id === id);
+    if (p && p.onCourt) { toast('請先將球員從場地移除'); return; }
+    players = players.filter(p => p.id !== id);
+    courts.forEach(c => { for(let i=0;i<4;i++) if(c[i]===id) c[i]=null; });
+    render(); saveData();
+}
+
+function setOnCourt(id, val) {
+    const p = players.find(p => p.id === id);
+    if (p) p.onCourt = val;
+}
+
+function randomAssign() {
+    resetCourts();
+    const avail = players.filter(p => !p.onCourt)
+        .sort((a,b) => a.playCount !== b.playCount ? a.playCount - b.playCount : Math.random()-0.5);
+    let idx = 0;
+    for (let ci = 0; ci < courtCount; ci++) {
+        for (let si = 0; si < 4; si++) {
+            if (idx >= avail.length) break;
+            courts[ci][si] = avail[idx].id;
+            avail[idx].onCourt = true;
+            idx++;
+        }
+    }
+    render(); saveData();
+    toast('✅ 隨機排場完成');
+}
+
+function toggleManual() {
+    manualMode = !manualMode;
+    toast(manualMode ? '✋ 點擊空格指定球員，點已排球員可移除' : '手動模式關閉');
+    render();
+}
+
+function slotClick(ci, si) {
+    if (!manualMode) return;
+    const pid = courts[ci][si];
+    if (pid !== null) {
+        setOnCourt(pid, false);
+        courts[ci][si] = null;
+        render();
+    } else {
+        pendingSlot = { ci, si };
+        openModal();
+    }
+}
+
+function openModal() {
+    const {ci, si} = pendingSlot;
+    document.getElementById('modalTitle').textContent =
+        `場地 ${ci+1}・${si < 2 ? 'A 隊' : 'B 隊'}・位置 ${(si%2)+1}`;
+    const avail = players.filter(p => !p.onCourt);
+    document.getElementById('modalChips').innerHTML = avail.length
+        ? avail.map(p => `<div class="mchip" onclick="pickPlayer(${p.id})">
+            ${p.name}<span style="font-size:11px;color:#999">${p.playCount}場</span>
+          </div>`).join('')
+        : '<span class="empty-hint">沒有可用的球員</span>';
+    document.getElementById('overlay').classList.add('show');
+}
+
+function pickPlayer(id) {
+    courts[pendingSlot.ci][pendingSlot.si] = id;
+    setOnCourt(id, true);
+    closeModal();
+    render(); saveData();
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+function overlayClick(e) { if (e.target.id === 'overlay') closeModal(); }
+
+function nextRound() {
+    let count = 0;
+    courts.forEach(c => c.forEach(pid => {
+        if (pid) { players.find(p=>p.id===pid).playCount++; count++; }
+    }));
+    if (!count) { toast('場地上沒有球員'); return; }
+    resetCourts();
+    randomAssign();
+    saveData();
+    toast('⏭ 下一輪開始！');
+}
+
+function resetCourts() {
+    players.forEach(p => p.onCourt = false);
+    courts = Array.from({length: courtCount}, () => [null,null,null,null]);
+}
+
+function clearAll() { resetCourts(); render(); saveData(); }
+
+function render() {
+    document.getElementById('courtNum').textContent = courtCount;
+    document.getElementById('manualBtn').className =
+        'btn btn-outline' + (manualMode ? ' active' : '');
+    renderCourts();
+    renderWaiting();
+    renderPlayers();
+}
+
+function renderCourts() {
+    document.getElementById('courtsGrid').innerHTML = courts.map((c,ci) => `
+        <div class="court-card" style="border-top-color:${COLORS[ci%COLORS.length]}">
+            <div class="court-title">場地 ${ci+1}</div>
+            <div class="team">${slot(ci,0,c[0])}${slot(ci,1,c[1])}</div>
+            <div class="vs-divider">VS</div>
+            <div class="team">${slot(ci,2,c[2])}${slot(ci,3,c[3])}</div>
+        </div>`).join('');
+}
+
+function slot(ci, si, pid) {
+    const p = pid ? players.find(x=>x.id===pid) : null;
+    if (manualMode) {
+        if (p) return `<div class="slot filled manual-filled" onclick="slotClick(${ci},${si})">${p.name}</div>`;
+        return `<div class="slot manual-empty" onclick="slotClick(${ci},${si})">＋ 選擇</div>`;
+    }
+    return p
+        ? `<div class="slot filled">${p.name}</div>`
+        : `<div class="slot">－</div>`;
+}
+
+function renderWaiting() {
+    const w = players.filter(p=>!p.onCourt).sort((a,b)=>a.playCount-b.playCount);
+    document.getElementById('waitBadge').textContent = w.length;
+    document.getElementById('waitList').innerHTML = w.length
+        ? w.map(p=>`<div class="chip waiting"><span>${p.name}</span><span class="chip-count">${p.playCount}</span></div>`).join('')
+        : '<span class="empty-hint">目前沒有等待的球員</span>';
+}
+
+function renderPlayers() {
+    document.getElementById('playerBadge').textContent = players.length;
+    document.getElementById('playerList').innerHTML = players.length
+        ? players.map(p=>`<div class="chip ${p.onCourt?'playing':''}">
+            <span>${p.name}</span>
+            <span class="chip-count">${p.playCount}</span>
+            <span class="chip-remove" onclick="removePlayer(${p.id})">×</span>
+          </div>`).join('')
+        : '<span class="empty-hint">尚未新增球員</span>';
+}
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>
