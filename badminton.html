@@ -414,7 +414,7 @@ let courtCount = 2, nextId = 1, manualMode = false, pendingSlot = null, selected
 let settings = { playCountWeight: 1.0, waitWeight: 1.0, levelBalance: true };
 
 function saveData() {
-    localStorage.setItem('badminton', JSON.stringify({ players, courts, courtCount, nextId, matchRecords, settings }));
+    localStorage.setItem('badminton', JSON.stringify({ players, courts, courtCount, nextId, matchRecords, settings, manualMode }));
 }
 
 function loadData() {
@@ -423,6 +423,7 @@ function loadData() {
         if (d) {
             players = (d.players || []).map(p => ({ gender: 'm', level: 0, resting: false, waitRounds: 0, ...p }));
             if (d.settings) settings = { ...settings, ...d.settings };
+            if (d.manualMode !== undefined) manualMode = d.manualMode;
             courts = d.courts || [];
             courtCount = d.courtCount || 2;
             nextId = d.nextId || 1;
@@ -529,7 +530,7 @@ function randomAssign() {
 function toggleManual() {
     manualMode = !manualMode;
     toast(manualMode ? '✋ 點擊空格指定球員，點已排球員可移除' : '手動模式關閉');
-    render();
+    render(); saveData();
 }
 
 function slotClick(ci, si) {
