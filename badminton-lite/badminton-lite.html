@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏸 羽毛球排場 Lite</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="排場Lite">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <style>
+        :root {
+            --primary: #1976d2;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #212121;
+            --text-light: #757575;
+            --border: #e0e0e0;
+            --shadow: rgba(0,0,0,0.08);
+            --male-bg: #e3f2fd; --male-border: #90caf9; --male-text: #1565c0;
+            --female-bg: #fce4ec; --female-border: #f48fb1; --female-text: #880e4f;
+        }
+        [data-theme="dark"] {
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0;
+            --text-light: #9e9e9e; --border: #333; --shadow: rgba(0,0,0,0.3);
+            --male-bg: #0d2a4a; --male-border: #3949ab; --male-text: #90caf9;
+            --female-bg: #3b0a1e; --female-border: #ad1457; --female-text: #f48fb1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding-bottom: 80px;
+            transition: background 0.2s, color 0.2s;
+        }
+        body[data-font="small"]  { font-size: 12px; }
+        body[data-font="medium"] { font-size: 14px; }
+        body[data-font="large"]  { font-size: 16px; }
+
+        /* Header */
+        .header {
+            background: var(--primary); color: white;
+            padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25); position: sticky; top: 0; z-index: 100;
+        }
+        .header h1 { font-size: 1.2em; font-weight: 700; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .court-ctrl { display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
+        .btn-circle {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.7); background: transparent; color: white;
+            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-circle:hover { background: rgba(255,255,255,0.2); }
+        .court-num { font-size: 1.1em; font-weight: 700; min-width: 20px; text-align: center; }
+        .btn-icon { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; padding: 3px; opacity: 0.9; }
+        .btn-icon:hover { opacity: 1; }
+
+        /* Layout */
+        .container { padding: 12px; max-width: 1200px; margin: 0 auto; }
+        .courts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
+        .court-card {
+            background: var(--card); border-radius: 14px; padding: 14px;
+            box-shadow: 0 2px 6px var(--shadow); border-top: 5px solid #2196F3;
+        }
+        .court-title { font-size: 0.85em; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .team { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .vs-divider { display: flex; align-items: center; gap: 6px; margin: 8px 0; color: var(--text-light); font-size: 0.78em; font-weight: 700; }
+        .vs-divider::before, .vs-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .slot {
+            min-height: 44px; border-radius: 8px; border: 2px dashed #90caf9;
+            background: var(--male-bg); display: flex; align-items: center; justify-content: center;
+            font-size: 0.9em; font-weight: 600; color: var(--male-text);
+            transition: all 0.15s; padding: 4px 6px; text-align: center; flex-direction: column; gap: 2px;
+        }
+        .slot.filled { border-style: solid; }
+        .slot.filled.male { border-color: var(--male-border); background: var(--male-bg); color: var(--male-text); }
+        .slot.filled.female { border-color: var(--female-border); background: var(--female-bg); color: var(--female-text); }
+        .slot.manual-empty { cursor: pointer; border-color: #a5d6a7; background: #e8f5e9; color: #2e7d32; }
+        [data-theme="dark"] .slot.manual-empty { background: #1b3a1e; color: #81c784; }
+        .slot.manual-empty:hover { opacity: 0.8; }
+        .slot.manual-filled { cursor: pointer; }
+        .slot.manual-filled:hover { opacity: 0.7; }
+        .slot-level { font-size: 0.72em; opacity: 0.65; }
+
+        /* Section */
+        .section { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px var(--shadow); }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .section-title { font-size: 1em; font-weight: 700; }
+        .badge { background: var(--primary); color: white; border-radius: 12px; padding: 2px 10px; font-size: 0.8em; font-weight: 600; }
+
+        /* Chips */
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip {
+            border-radius: 20px; padding: 6px 10px; font-size: 0.9em; font-weight: 500;
+            display: flex; align-items: center; gap: 5px;
+            border: 1.5px solid var(--border); background: var(--card);
+        }
+        .chip.male { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
+        .chip.female { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
+        .chip.playing.male { filter: brightness(0.92); }
+        .chip.playing.female { filter: brightness(0.92); }
+        .chip.resting { background: #f3e5f5; border-color: #ce93d8; color: #6a1b9a; }
+        [data-theme="dark"] .chip.resting { background: #2a1040; border-color: #7b1fa2; color: #ce93d8; }
+        .chip.absent { opacity: 0.4; }
+        .chip-count { background: #bdbdbd; color: white; border-radius: 10px; padding: 1px 7px; font-size: 0.78em; }
+        .chip-level { font-size: 0.72em; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+        .chip-btn { font-size: 0.9em; line-height: 1; cursor: pointer; opacity: 0.55; transition: opacity 0.15s; }
+        .chip-btn:hover { opacity: 1; }
+        .chip-remove { color: #bdbdbd; font-size: 1.1em; line-height: 1; cursor: pointer; transition: color 0.15s; }
+        .chip-remove:hover { color: var(--danger); }
+        .chip-note { font-size: 0.72em; color: var(--text-light); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .empty-hint { color: var(--text-light); font-size: 0.9em; padding: 6px 0; }
+
+        /* Add form */
+        .add-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .add-row { display: flex; gap: 8px; }
+        .add-row input[type="text"], .add-row select {
+            flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+            padding: 9px 12px; font-size: 0.95em; outline: none;
+            background: var(--card); color: var(--text); transition: border-color 0.15s;
+        }
+        .add-row input[type="text"]:focus, .add-row select:focus { border-color: var(--primary); }
+        .gender-btns { display: flex; gap: 4px; }
+        .btn-gender {
+            padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+            font-size: 0.9em; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text-light);
+        }
+        .btn-gender.male.active { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
+        .btn-gender.female.active { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
+
+        /* Buttons */
+        .btn { padding: 10px 14px; border-radius: 9px; border: none; font-size: 0.95em; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1565c0; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover:not(:disabled) { background: #2e7d32; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover:not(:disabled) { background: #e65100; }
+        .btn-outline { background: var(--card); border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover:not(:disabled) { background: var(--male-bg); }
+        .btn-outline.active { background: var(--primary); color: white; }
+        .btn-sm { padding: 6px 10px; font-size: 0.82em; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Action bar */
+        .action-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+            border-top: 1px solid var(--border); padding: 10px 12px;
+            display: flex; gap: 8px; box-shadow: 0 -2px 8px var(--shadow); z-index: 100;
+        }
+        .action-bar .btn { flex: 1; font-size: 0.82em; padding: 10px 4px; }
+
+        /* Overlays / Modals */
+        .overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .overlay.show { display: flex; }
+        .modal {
+            background: var(--card); border-radius: 16px; padding: 20px;
+            width: 100%; max-width: 440px; max-height: 84vh; overflow-y: auto;
+        }
+        .modal h3 { font-size: 1em; font-weight: 700; margin-bottom: 14px; }
+        .modal-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .mchip {
+            padding: 8px 14px; border-radius: 20px; border: 2px solid var(--border);
+            font-size: 0.95em; cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 6px;
+            background: var(--card); color: var(--text);
+        }
+        .mchip.male { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
+        .mchip.female { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
+        .mchip:hover { filter: brightness(0.93); }
+        .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+        .modal-btns .btn { flex: 1; }
+
+        /* Attendance */
+        .attend-chip {
+            padding: 8px 12px; border-radius: 12px; border: 2px solid var(--border);
+            font-size: 0.9em; cursor: pointer; display: flex; align-items: center; gap: 6px;
+            background: var(--card); color: var(--text); transition: all 0.15s;
+        }
+        .attend-chip.present { border-color: var(--success); background: #e8f5e9; color: #2e7d32; }
+        [data-theme="dark"] .attend-chip.present { background: #1b3a1e; color: #81c784; }
+        .attend-chip.absent-mark { opacity: 0.45; }
+
+        /* Pairs */
+        .pair-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px; background: var(--bg); margin-bottom: 6px; }
+        .pair-type { font-size: 0.78em; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+        .pair-together { background: #e8f5e9; color: #2e7d32; }
+        .pair-avoid { background: #ffebee; color: #c62828; }
+        [data-theme="dark"] .pair-together { background: #1b3a1e; color: #81c784; }
+        [data-theme="dark"] .pair-avoid { background: #3b0a0a; color: #ef9a9a; }
+        .pair-names { flex: 1; font-size: 0.9em; font-weight: 500; }
+
+        /* Settings */
+        .settings-group { margin-bottom: 18px; }
+        .settings-label { display: block; font-size: 0.95em; font-weight: 600; margin-bottom: 6px; }
+        .settings-hint { display: block; font-size: 0.78em; color: var(--text-light); font-weight: 400; margin-top: 2px; }
+        .settings-row { display: flex; align-items: center; gap: 10px; }
+        .settings-row input[type="range"] { flex: 1; accent-color: var(--primary); }
+        .settings-val { font-size: 0.95em; font-weight: 700; color: var(--primary); min-width: 32px; text-align: right; }
+        .toggle-wrap { display: flex; align-items: center; cursor: pointer; }
+        .toggle-wrap input { display: none; }
+        .toggle { width: 44px; height: 24px; border-radius: 12px; background: #ccc; position: relative; transition: background 0.2s; }
+        .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-wrap input:checked + .toggle { background: var(--primary); }
+        .toggle-wrap input:checked + .toggle::after { transform: translateX(20px); }
+        .radio-group { display: flex; gap: 8px; }
+        .radio-btn { padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 0.88em; cursor: pointer; background: var(--card); color: var(--text); font-weight: 600; transition: all 0.15s; }
+        .radio-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* History */
+        .history-date { font-size: 0.8em; color: var(--text-light); font-weight: 700; margin: 14px 0 6px; }
+        .history-record { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+        .history-time { font-size: 0.75em; color: var(--text-light); margin-bottom: 6px; }
+        .history-court { margin-top: 6px; }
+        .history-court-label { font-size: 0.75em; color: var(--text-light); font-weight: 600; }
+        .history-players { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+        .h-chip { padding: 2px 8px; border-radius: 10px; font-size: 0.8em; font-weight: 500; }
+        .h-chip.male { background: var(--male-bg); color: var(--male-text); }
+        .h-chip.female { background: var(--female-bg); color: var(--female-text); }
+        .session-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+        .session-date { font-weight: 700; font-size: 0.9em; }
+        .session-info { font-size: 0.8em; color: var(--text-light); margin-top: 3px; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; }
+        .tab-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card); color: var(--text-light); font-size: 0.88em; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* Note modal */
+        .note-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.9em; font-family: inherit; resize: vertical; min-height: 80px; outline: none; background: var(--card); color: var(--text); }
+        .note-textarea:focus { border-color: var(--primary); }
+
+        /* Batch */
+        .batch-hint { font-size: 0.8em; color: var(--text-light); margin-bottom: 10px; line-height: 1.7; }
+        .batch-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.88em; font-family: inherit; resize: vertical; min-height: 160px; outline: none; background: var(--card); color: var(--text); }
+        .batch-textarea:focus { border-color: var(--primary); }
+
+        .toast { position: fixed; top: 68px; left: 50%; transform: translateX(-50%); background: rgba(33,33,33,0.92); color: white; padding: 10px 20px; border-radius: 24px; font-size: 0.9em; z-index: 999; opacity: 0; transition: opacity 0.25s; white-space: nowrap; pointer-events: none; }
+        .toast.show { opacity: 1; }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1em; }
+            .action-bar .btn { font-size: 0.75em; }
+            .courts-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Install banner */
+        #install-banner {
+            display: none; align-items: center; gap: 10px;
+            background: #e8f5e9; border-bottom: 1px solid #c8e6c9;
+            padding: 10px 14px; cursor: pointer;
+        }
+        [data-theme="dark"] #install-banner { background: #1b3a1e; border-color: #2e7d32; }
+        #install-banner.show { display: flex; }
+        .install-banner-text { flex: 1; font-size: 0.88em; font-weight: 600; color: #2e7d32; }
+        [data-theme="dark"] .install-banner-text { color: #81c784; }
+        .install-banner-close {
+            background: none; border: none; font-size: 16px; cursor: pointer;
+            color: #888; padding: 2px 4px; line-height: 1;
+        }
+
+        /* Install guide modal */
+        .install-step {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .install-step:last-child { border-bottom: none; }
+        .install-step-num {
+            width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+            background: var(--primary); color: white;
+            font-size: 0.82em; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .install-step-body { flex: 1; font-size: 0.9em; line-height: 1.6; }
+        .install-step-body b { color: var(--text); }
+        .install-os-tab { display: flex; gap: 8px; margin-bottom: 16px; }
+        .install-os-btn {
+            flex: 1; padding: 9px; border-radius: 10px; border: 1.5px solid var(--border);
+            font-size: 0.9em; font-weight: 700; cursor: pointer;
+            background: var(--card); color: var(--text-light); transition: all 0.15s;
+        }
+        .install-os-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .install-icon-inline {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px; border-radius: 5px;
+            background: var(--bg); border: 1px solid var(--border);
+            vertical-align: middle; font-size: 14px; margin: 0 2px;
+        }
+
+        /* Tutorial */
+        #tut-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.86); z-index: 900;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        #tut-overlay.show { display: flex; }
+        .tut-box {
+            background: #1e2533; border-radius: 18px; padding: 28px 24px 22px;
+            width: 100%; max-width: 400px; color: #e8eaf0;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+        .tut-step-label {
+            font-size: 0.72em; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #7986cb; margin-bottom: 10px;
+        }
+        .tut-icon { font-size: 2.4em; margin-bottom: 10px; line-height: 1; }
+        .tut-title { font-size: 1.15em; font-weight: 700; margin-bottom: 10px; color: #fff; }
+        .tut-body { font-size: 0.9em; line-height: 1.7; color: #b0bec5; margin-bottom: 20px; }
+        .tut-body b { color: #e8eaf0; }
+        .tut-body .tut-tag {
+            display: inline-block; background: rgba(255,255,255,0.1); border-radius: 6px;
+            padding: 1px 8px; font-size: 0.88em; font-weight: 700; color: #fff; margin: 0 2px;
+        }
+        .tut-dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 18px; }
+        .tut-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.2s; }
+        .tut-dot.active { background: #7986cb; }
+        .tut-btns { display: flex; gap: 10px; }
+        .tut-btn {
+            flex: 1; padding: 11px; border-radius: 10px; border: none;
+            font-size: 0.92em; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+        }
+        .tut-btn:active { opacity: 0.8; }
+        .tut-btn-next { background: #3f51b5; color: white; }
+        .tut-btn-skip { background: rgba(255,255,255,0.08); color: #90a4ae; }
+        .tut-btn-prev { background: rgba(255,255,255,0.08); color: #90a4ae; }
+
+        /* PRO lock */
+        .pro-badge {
+            display: inline-block; background: #f59e0b; color: #000;
+            font-size: 0.52em; font-weight: 800; padding: 1px 5px;
+            border-radius: 4px; vertical-align: middle; margin-left: 2px;
+            letter-spacing: 0.5px; line-height: 1.6;
+        }
+        .upgrade-feature {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 0.92em;
+        }
+        .upgrade-feature:last-child { border-bottom: none; }
+        .upgrade-feature .uf-icon { font-size: 1.25em; width: 28px; text-align: center; }
+        #licenseInput { letter-spacing: 1px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🏸 羽毛球排場</h1>
+    <div class="header-right">
+        <div class="court-ctrl">
+            <span>場地</span>
+            <button class="btn-circle" onclick="changeCourts(-1)">−</button>
+            <span class="court-num" id="courtNum">2</span>
+            <button class="btn-circle" onclick="changeCourts(1)">+</button>
+        </div>
+        <button class="btn-icon" onclick="openAttendance()" title="出席">👥</button>
+        <button class="btn-icon" onclick="openHistory()" title="紀錄">📋<span class="pro-badge">PRO</span></button>
+        <button class="btn-icon" onclick="openPairs()" title="搭檔設定">🔗<span class="pro-badge">PRO</span></button>
+        <button class="btn-icon" onclick="openSettings()" title="設定">⚙️<span class="pro-badge">PRO</span></button>
+        <button class="btn-icon" id="darkBtn" onclick="toggleDark()" title="深色模式">🌙</button>
+        <button class="btn-icon" id="installBtn" onclick="openInstallGuide()" title="安裝到手機" style="display:none">📲</button>
+    </div>
+</div>
+
+<!-- 安裝提示橫幅 -->
+<div id="install-banner" onclick="openInstallGuide()">
+    <span style="font-size:1.3em">📲</span>
+    <span class="install-banner-text">安裝到手機主畫面，隨時快速開啟</span>
+    <button class="install-banner-close" onclick="event.stopPropagation();dismissInstallBanner()" title="關閉">✕</button>
+</div>
+
+<div class="container">
+    <div class="courts-grid" id="courtsGrid"></div>
+
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">⏳ 等待上場</span>
+            <span class="badge" id="waitBadge">0</span>
+        </div>
+        <div class="chips" id="waitList"><span class="empty-hint">目前沒有等待的球員</span></div>
+    </div>
+
+    <div class="section" id="restSection" style="display:none">
+        <div class="section-header">
+            <span class="section-title">😴 休息中</span>
+            <span class="badge" id="restBadge">0</span>
+        </div>
+        <div class="chips" id="restList"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <span class="section-title">👥 球員名單</span>
+            <span class="badge" id="playerBadge">0</span>
+        </div>
+        <div class="chips" id="playerList"><span class="empty-hint">尚未新增球員</span></div>
+        <div class="add-form">
+            <div class="add-row">
+                <input id="nameInput" type="text" placeholder="球員姓名"
+                       onkeydown="if(event.key==='Enter')addPlayer()">
+                <div class="gender-btns">
+                    <button id="genderM" class="btn-gender male active" onclick="setGender('m')">男</button>
+                    <button id="genderF" class="btn-gender female" onclick="setGender('f')">女</button>
+                </div>
+            </div>
+            <div class="add-row">
+                <select id="levelSelect">
+                    <option value="0">新手</option><option value="1">初中</option>
+                    <option value="2">中階</option><option value="3">中進</option>
+                    <option value="4">高階</option><option value="5">職業</option>
+                </select>
+                <button class="btn btn-primary" onclick="addPlayer()">新增</button>
+                <button class="btn btn-outline" onclick="openBatch()">批量<span class="pro-badge">PRO</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="action-bar">
+    <button class="btn btn-primary" onclick="randomAssign()">🎲 隨機排場</button>
+    <button class="btn btn-outline" id="manualBtn" onclick="toggleManual()">✋ 手動</button>
+    <button class="btn btn-success" onclick="nextRound()">⏭ 下一輪</button>
+    <button class="btn btn-warning" onclick="clearAll()">🔄 清空</button>
+</div>
+
+<!-- 選球員 -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+    <div class="modal">
+        <h3 id="modalTitle">選擇球員</h3>
+        <div class="modal-chips" id="modalChips"></div>
+        <div class="modal-btns"><button class="btn btn-outline" onclick="closeModal()">取消</button></div>
+    </div>
+</div>
+
+<!-- 出席管理 -->
+<div class="overlay" id="attendanceOverlay" onclick="if(event.target.id==='attendanceOverlay')closeAttendance()">
+    <div class="modal">
+        <h3>👥 今日出席</h3>
+        <p style="font-size:0.82em;color:var(--text-light);margin-bottom:12px">點選球員切換出席/缺席，只有出席球員才會參與排場</p>
+        <div class="chips" id="attendanceList" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button class="btn btn-outline btn-sm" onclick="setAllAttendance(true)">全部出席</button>
+            <button class="btn btn-outline btn-sm" onclick="setAllAttendance(false)">全部缺席</button>
+        </div>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeAttendance()">取消</button>
+            <button class="btn btn-primary" onclick="saveAttendance()">確認出席</button>
+        </div>
+    </div>
+</div>
+
+<!-- 批量新增 -->
+<div class="overlay" id="batchOverlay" onclick="if(event.target.id==='batchOverlay')closeBatch()">
+    <div class="modal">
+        <h3>批量新增球員</h3>
+        <p class="batch-hint">格式：姓名,性別,等級（每行一筆）<br>性別：男 / 女　　等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業</p>
+        <textarea class="batch-textarea" id="batchText" placeholder="小明,男,初中&#10;小華,女,新手&#10;小李,男,中階"></textarea>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeBatch()">取消</button>
+            <button class="btn btn-primary" onclick="saveBatch()">新增</button>
+        </div>
+    </div>
+</div>
+
+<!-- 備註編輯 -->
+<div class="overlay" id="noteOverlay" onclick="if(event.target.id==='noteOverlay')closeNote()">
+    <div class="modal" style="max-width:360px">
+        <h3 id="noteTitle">📝 球員備註</h3>
+        <textarea class="note-textarea" id="noteInput" placeholder="輸入備註（例如：膝蓋傷、只打雙打...）"></textarea>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeNote()">取消</button>
+            <button class="btn btn-primary" onclick="saveNote()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 搭檔設定 -->
+<div class="overlay" id="pairsOverlay" onclick="if(event.target.id==='pairsOverlay')closePairs()">
+    <div class="modal" style="max-width:440px">
+        <h3>🔗 搭檔設定</h3>
+        <div id="pairsList" style="margin-bottom:14px"></div>
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+            <p style="font-size:0.85em;font-weight:600;margin-bottom:8px">新增關係</p>
+            <div class="add-row" style="margin-bottom:8px">
+                <select id="pair1Select" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:0.9em;background:var(--card);color:var(--text)"></select>
+                <select id="pair2Select" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:0.9em;background:var(--card);color:var(--text)"></select>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" style="flex:1" onclick="addPair('together')">✅ 固定搭檔</button>
+                <button class="btn btn-danger btn-sm" style="flex:1" onclick="addPair('avoid')">🚫 盡量迴避</button>
+            </div>
+        </div>
+        <div class="modal-btns"><button class="btn btn-outline" onclick="closePairs()">關閉</button></div>
+    </div>
+</div>
+
+<!-- 對戰紀錄 & 活動歷史 -->
+<div class="overlay" id="historyOverlay" onclick="if(event.target.id==='historyOverlay')closeHistory()">
+    <div class="modal" style="max-width:480px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0">📋 紀錄</h3>
+            <button class="btn btn-outline btn-sm" onclick="exportData()">📤 匯出</button>
+        </div>
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabMatch" onclick="switchTab('match')">對戰紀錄</button>
+            <button class="tab-btn" id="tabSession" onclick="switchTab('session')">活動歷史</button>
+        </div>
+        <div id="historyContent"></div>
+        <div class="modal-btns">
+            <button class="btn btn-outline btn-sm" onclick="clearHistory()">清除紀錄</button>
+            <button class="btn btn-outline" onclick="closeHistory()">關閉</button>
+        </div>
+    </div>
+</div>
+
+<!-- 排場設定 -->
+<div class="overlay" id="settingsOverlay" onclick="if(event.target.id==='settingsOverlay')closeSettings()">
+    <div class="modal" style="max-width:400px">
+        <h3>⚙️ 排場參數設定</h3>
+        <div class="settings-group">
+            <label class="settings-label">對戰次數權重<span class="settings-hint">數值越高，場數少的球員越優先</span></label>
+            <div class="settings-row">
+                <input type="range" id="playCountWeight" min="0" max="10" step="0.1" value="1"
+                    oninput="document.getElementById('playCountVal').textContent=parseFloat(this.value).toFixed(1)">
+                <span class="settings-val" id="playCountVal">1.0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">等待輪數權重<span class="settings-hint">數值越高，等越久的球員越優先</span></label>
+            <div class="settings-row">
+                <input type="range" id="waitWeight" min="0" max="10" step="0.1" value="1"
+                    oninput="document.getElementById('waitVal').textContent=parseFloat(this.value).toFixed(1)">
+                <span class="settings-val" id="waitVal">1.0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">每場最少男性<span class="settings-hint">每個場地至少幾位男性球員</span></label>
+            <div class="settings-row">
+                <input type="range" id="minMale" min="0" max="4" step="1" value="0"
+                    oninput="document.getElementById('minMaleVal').textContent=this.value">
+                <span class="settings-val" id="minMaleVal">0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">每場最少女性<span class="settings-hint">每個場地至少幾位女性球員</span></label>
+            <div class="settings-row">
+                <input type="range" id="minFemale" min="0" max="4" step="1" value="0"
+                    oninput="document.getElementById('minFemaleVal').textContent=this.value">
+                <span class="settings-val" id="minFemaleVal">0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">等級均衡<span class="settings-hint">同場四人盡量分散程度等級</span></label>
+            <label class="toggle-wrap"><input type="checkbox" id="levelBalance" checked><span class="toggle"></span></label>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">字體大小</label>
+            <div class="radio-group">
+                <button class="radio-btn" id="fontSmall" onclick="setFont('small')">小</button>
+                <button class="radio-btn active" id="fontMedium" onclick="setFont('medium')">中</button>
+                <button class="radio-btn" id="fontLarge" onclick="setFont('large')">大</button>
+            </div>
+        </div>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeSettings()">取消</button>
+            <button class="btn btn-primary" onclick="saveSettings()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 安裝教學 -->
+<div class="overlay" id="installOverlay" onclick="if(event.target.id==='installOverlay')closeInstallGuide()">
+    <div class="modal" style="max-width:420px">
+        <h3>📲 安裝到手機主畫面</h3>
+        <div class="install-os-tab">
+            <button class="install-os-btn" id="tab-android" onclick="switchInstallTab('android')">
+                🤖 Android
+            </button>
+            <button class="install-os-btn" id="tab-ios" onclick="switchInstallTab('ios')">
+                 iPhone / iPad
+            </button>
+        </div>
+
+        <!-- Android -->
+        <div id="install-android-content">
+            <div id="install-android-native" style="display:none;margin-bottom:14px">
+                <p style="font-size:0.88em;color:var(--text-light);margin-bottom:10px">偵測到您的瀏覽器支援直接安裝：</p>
+                <button class="btn btn-primary" style="width:100%" onclick="triggerInstall()">📲 立即安裝到主畫面</button>
+            </div>
+            <p style="font-size:0.82em;color:var(--text-light);margin-bottom:10px" id="install-android-or">或手動安裝步驟（Chrome 瀏覽器）：</p>
+            <div class="install-step">
+                <div class="install-step-num">1</div>
+                <div class="install-step-body">使用 <b>Chrome</b> 瀏覽器開啟此頁面</div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">2</div>
+                <div class="install-step-body">點右上角 <span class="install-icon-inline">⋮</span> 三點選單</div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">3</div>
+                <div class="install-step-body">選擇「<b>安裝應用程式</b>」或「<b>新增至主畫面</b>」</div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">4</div>
+                <div class="install-step-body">跳出確認視窗後點「<b>安裝</b>」即完成</div>
+            </div>
+        </div>
+
+        <!-- iOS -->
+        <div id="install-ios-content" style="display:none">
+            <p style="font-size:0.82em;color:var(--text-light);margin-bottom:10px">請使用 <b>Safari</b> 瀏覽器，步驟如下：</p>
+            <div class="install-step">
+                <div class="install-step-num">1</div>
+                <div class="install-step-body">使用 <b>Safari</b> 開啟此頁面（Chrome 不支援 iOS 安裝）</div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">2</div>
+                <div class="install-step-body">點底部工具列中間的
+                    <span class="install-icon-inline" style="font-size:16px">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg>
+                    </span>
+                    <b>分享</b>按鈕（箭頭向上的方框）
+                </div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">3</div>
+                <div class="install-step-body">在選單中向下滑，找到並點選「<b>加入主畫面</b>」<span style="font-size:1.1em">＋</span></div>
+            </div>
+            <div class="install-step">
+                <div class="install-step-num">4</div>
+                <div class="install-step-body">右上角點「<b>新增</b>」確認，App 圖示會出現在桌面</div>
+            </div>
+            <p style="font-size:0.8em;color:var(--text-light);margin-top:12px;padding:10px;background:var(--bg);border-radius:8px">
+                💡 安裝後從桌面開啟會以全螢幕 App 模式運行，並可在無網路時使用
+            </p>
+        </div>
+
+        <div class="modal-btns" style="margin-top:16px">
+            <button class="btn btn-outline" onclick="closeInstallGuide()">關閉</button>
+        </div>
+    </div>
+</div>
+
+<!-- 進階功能解鎖 -->
+<div class="overlay" id="upgradeOverlay" onclick="if(event.target.id==='upgradeOverlay')closeUpgradeModal()">
+    <div class="modal" style="max-width:400px">
+        <h3>🔓 解鎖進階功能</h3>
+        <p style="font-size:0.85em;color:var(--text-light);margin-bottom:14px">以下為進階功能，需授權碼才能使用：</p>
+        <div style="margin-bottom:16px">
+            <div class="upgrade-feature"><span class="uf-icon">📋</span><div><b>對戰紀錄 & 活動歷史</b><br><span style="font-size:0.8em;color:var(--text-light)">查看歷史對戰名單與場次統計</span></div></div>
+            <div class="upgrade-feature"><span class="uf-icon">🔗</span><div><b>搭檔設定</b><br><span style="font-size:0.8em;color:var(--text-light)">設定固定搭檔或迴避配對關係</span></div></div>
+            <div class="upgrade-feature"><span class="uf-icon">⚙️</span><div><b>排場參數設定</b><br><span style="font-size:0.8em;color:var(--text-light)">調整排場權重與性別比例</span></div></div>
+            <div class="upgrade-feature"><span class="uf-icon">📥</span><div><b>批量新增球員</b><br><span style="font-size:0.8em;color:var(--text-light)">一次匯入多位球員名單</span></div></div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+            <label style="font-size:0.88em;font-weight:600;display:block;margin-bottom:8px">已有授權碼？輸入以解鎖：</label>
+            <div style="display:flex;gap:8px">
+                <input id="licenseInput" type="text" placeholder="BDMT-XXXX-XXXX-XXXX" maxlength="19"
+                    style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:0.9em;background:var(--card);color:var(--text);outline:none"
+                    oninput="formatLicenseInput(this)"
+                    onkeydown="if(event.key==='Enter')submitLicenseCode()">
+                <button class="btn btn-primary" onclick="submitLicenseCode()">啟用</button>
+            </div>
+            <p id="licenseMsg" style="font-size:0.82em;margin-top:8px;min-height:18px"></p>
+        </div>
+        <div class="modal-btns" style="margin-top:4px">
+            <button class="btn btn-outline" onclick="closeUpgradeModal()">稍後再說</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 新手教學 -->
+<div id="tut-overlay">
+    <div class="tut-box">
+        <div class="tut-step-label" id="tut-step-label">步驟 1 / 6</div>
+        <div class="tut-icon" id="tut-icon">🏸</div>
+        <div class="tut-title" id="tut-title"></div>
+        <div class="tut-body" id="tut-body"></div>
+        <div class="tut-dots" id="tut-dots"></div>
+        <div class="tut-btns">
+            <button class="tut-btn tut-btn-prev" id="tut-prev-btn" onclick="tutPrev()">上一步</button>
+            <button class="tut-btn tut-btn-next" id="tut-next-btn" onclick="tutNext()">下一步</button>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+            <button class="tut-btn tut-btn-skip" style="flex:none;width:auto;padding:8px 20px;font-size:0.82em" onclick="dismissTutorial()">略過教學</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const COLORS = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#F44336','#00BCD4','#795548','#607D8B'];
+const LEVELS = ['新手','初中','中階','中進','高階','職業'];
+const LEVEL_COLORS = ['#4CAF50','#e91e8c','#FF9800','#29B6F6','#757575','#212121'];
+const GENDER_MAP = {'男':'m','男性':'m','m':'m','1':'m','女':'f','女性':'f','f':'f','0':'f'};
+const LEVEL_MAP  = {'新手':0,'初中':1,'中階':2,'中進':3,'高階':4,'職業':5,'0':0,'1':1,'2':2,'3':3,'4':4,'5':5};
+
+let players=[], courts=[], matchRecords=[], sessions=[], pairs=[];
+let courtCount=2, nextId=1, manualMode=false, pendingSlot=null, selectedGender='m';
+let settings = { playCountWeight:1.0, waitWeight:1.0, levelBalance:true, minMale:0, minFemale:0, darkMode:false, fontSize:'medium' };
+let editingNoteId = null, historyTab = 'match';
+
+// ── License / PRO unlock ─────────────────────────────────
+// Code format: BDMT-XXXX-XXXX-XXXX (16 alphanum after stripping dashes)
+// Last 4 chars = checksum of body chars 5-12
+// To generate a valid code (run in browser console):
+//   function gen() {
+//     const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+//     let b=''; for(let i=0;i<8;i++) b+=ch[Math.random()*ch.length|0];
+//     let n=0; for(let i=0;i<8;i++) n=(n*31+b.charCodeAt(i))>>>0;
+//     const c=(n%1679616).toString(36).toUpperCase().padStart(4,'0');
+//     return `BDMT-${b.slice(0,4)}-${b.slice(4,8)}-${c}`;
+//   }
+
+const LICENSE_KEY = 'bdmt-lite-license';
+
+function isUnlocked() {
+    return !!localStorage.getItem(LICENSE_KEY);
+}
+
+function requirePro(fn) {
+    if (isUnlocked()) { fn(); return; }
+    openUpgradeModal();
+}
+
+function openUpgradeModal() {
+    document.getElementById('licenseMsg').textContent = '';
+    document.getElementById('licenseInput').value = '';
+    document.getElementById('upgradeOverlay').classList.add('show');
+}
+
+function closeUpgradeModal() {
+    document.getElementById('upgradeOverlay').classList.remove('show');
+}
+
+function formatLicenseInput(el) {
+    let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (v.length > 16) v = v.slice(0, 16);
+    let out = '';
+    for (let i = 0; i < v.length; i++) {
+        if (i === 4 || i === 8 || i === 12) out += '-';
+        out += v[i];
+    }
+    el.value = out;
+}
+
+function validateCode(input) {
+    const c = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!c.startsWith('BDMT') || c.length !== 16) return false;
+    let n = 0;
+    for (let i = 4; i < 12; i++) n = (n * 31 + c.charCodeAt(i)) >>> 0;
+    return (n % 1679616).toString(36).toUpperCase().padStart(4, '0') === c.slice(12, 16);
+}
+
+function submitLicenseCode() {
+    const input = document.getElementById('licenseInput').value.trim();
+    const msg = document.getElementById('licenseMsg');
+    if (!input) {
+        msg.style.color = 'var(--danger)'; msg.textContent = '請輸入授權碼'; return;
+    }
+    if (validateCode(input)) {
+        localStorage.setItem(LICENSE_KEY, input.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+        msg.style.color = 'var(--success)'; msg.textContent = '✅ 授權成功！所有功能已解鎖';
+        setTimeout(() => { closeUpgradeModal(); toast('🎉 進階功能已解鎖！'); }, 1000);
+    } else {
+        msg.style.color = 'var(--danger)'; msg.textContent = '授權碼無效，請確認後重新輸入';
+    }
+}
+
+// ── Persistence ──────────────────────────────────────────
+function saveData() {
+    localStorage.setItem('badminton-lite', JSON.stringify({
+        players, courts, courtCount, nextId, matchRecords, sessions, pairs, settings, manualMode
+    }));
+}
+
+function loadData() {
+    try {
+        const d = JSON.parse(localStorage.getItem('badminton-lite'));
+        if (d) {
+            players = (d.players||[]).map(p=>({gender:'m',level:0,resting:false,waitRounds:0,attending:true,note:'',...p}));
+            courts = d.courts||[];
+            courtCount = d.courtCount||2;
+            nextId = d.nextId||1;
+            matchRecords = d.matchRecords||[];
+            sessions = d.sessions||[];
+            pairs = d.pairs||[];
+            if (d.settings) settings = {...settings,...d.settings};
+            if (d.manualMode!==undefined) manualMode = d.manualMode;
+            while (courts.length < courtCount) courts.push([null,null,null,null]);
+            courts = courts.slice(0, courtCount);
+            return;
+        }
+    } catch(e) {}
+    for (let i=0;i<courtCount;i++) courts.push([null,null,null,null]);
+}
+
+// ── Theme & Font ──────────────────────────────────────────
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', settings.darkMode ? 'dark' : '');
+    document.body.setAttribute('data-font', settings.fontSize||'medium');
+    document.getElementById('darkBtn').textContent = settings.darkMode ? '☀️' : '🌙';
+    const fm = settings.fontSize||'medium';
+    ['fontSmall','fontMedium','fontLarge'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('fontSmall').classList.toggle('active', fm==='small');
+    document.getElementById('fontMedium').classList.toggle('active', fm==='medium');
+    document.getElementById('fontLarge').classList.toggle('active', fm==='large');
+}
+
+function toggleDark() {
+    settings.darkMode = !settings.darkMode;
+    applyTheme(); saveData();
+}
+
+function setFont(size) {
+    settings.fontSize = size;
+    applyTheme();
+}
+
+// ── Courts ────────────────────────────────────────────────
+function changeCourts(d) {
+    const n = courtCount + d;
+    if (n<1||n>10) return;
+    if (d<0) { courts[courtCount-1].forEach(pid=>{if(pid)setOnCourt(pid,false);}); courts.pop(); }
+    else courts.push([null,null,null,null]);
+    courtCount = n;
+    render(); saveData();
+}
+
+// ── Players ───────────────────────────────────────────────
+function setGender(g) {
+    selectedGender = g;
+    document.getElementById('genderM').classList.toggle('active', g==='m');
+    document.getElementById('genderF').classList.toggle('active', g==='f');
+}
+
+function addPlayer() {
+    const inp = document.getElementById('nameInput');
+    const name = inp.value.trim();
+    if (!name) { toast('請輸入球員姓名'); return; }
+    if (players.find(p=>p.name===name)) { toast('球員名稱重複'); return; }
+    const level = parseInt(document.getElementById('levelSelect').value);
+    players.push({id:nextId++, name, gender:selectedGender, level, playCount:0, onCourt:false, resting:false, waitRounds:0, attending:true, note:''});
+    inp.value = '';
+    render(); saveData();
+}
+
+function removePlayer(id) {
+    const p = players.find(p=>p.id===id);
+    if (p&&p.onCourt) { toast('請先將球員從場地移除'); return; }
+    players = players.filter(p=>p.id!==id);
+    courts.forEach(c=>{for(let i=0;i<4;i++) if(c[i]===id) c[i]=null;});
+    pairs = pairs.filter(pr=>!pr.ids.includes(id));
+    render(); saveData();
+}
+
+function toggleRest(id) {
+    const p = players.find(p=>p.id===id);
+    if (!p||p.onCourt) { toast('請先將球員從場地移除'); return; }
+    p.resting = !p.resting;
+    render(); saveData();
+}
+
+function setOnCourt(id, val) { const p=players.find(p=>p.id===id); if(p) p.onCourt=val; }
+
+// ── Notes ─────────────────────────────────────────────────
+function openNote(id) {
+    editingNoteId = id;
+    const p = players.find(p=>p.id===id);
+    document.getElementById('noteTitle').textContent = `📝 ${p.name} 的備註`;
+    document.getElementById('noteInput').value = p.note||'';
+    document.getElementById('noteOverlay').classList.add('show');
+}
+function closeNote() { document.getElementById('noteOverlay').classList.remove('show'); }
+function saveNote() {
+    const p = players.find(p=>p.id===editingNoteId);
+    if (p) p.note = document.getElementById('noteInput').value.trim();
+    closeNote(); render(); saveData();
+}
+
+// ── Attendance ────────────────────────────────────────────
+let tempAttendance = {};
+
+function openAttendance() {
+    tempAttendance = {};
+    players.forEach(p => tempAttendance[p.id] = p.attending);
+    renderAttendanceList();
+    document.getElementById('attendanceOverlay').classList.add('show');
+}
+function closeAttendance() { document.getElementById('attendanceOverlay').classList.remove('show'); }
+
+function renderAttendanceList() {
+    document.getElementById('attendanceList').innerHTML = players.map(p => `
+        <div class="attend-chip ${tempAttendance[p.id]?'present':'absent-mark'}"
+             onclick="toggleTempAttend(${p.id})">
+            ${tempAttendance[p.id]?'✓':''} ${p.name}
+        </div>`).join('');
+}
+
+function toggleTempAttend(id) {
+    tempAttendance[id] = !tempAttendance[id];
+    renderAttendanceList();
+}
+
+function setAllAttendance(val) {
+    players.forEach(p => tempAttendance[p.id] = val);
+    renderAttendanceList();
+}
+
+function saveAttendance() {
+    const attendees = [];
+    players.forEach(p => {
+        const was = p.attending;
+        p.attending = tempAttendance[p.id];
+        if (p.attending) attendees.push(p.name);
+        if (!p.attending && p.onCourt) { setOnCourt(p.id, false); courts.forEach(c=>{for(let i=0;i<4;i++) if(c[i]===p.id) c[i]=null;}); }
+        if (!p.attending) p.resting = false;
+    });
+    if (attendees.length > 0) {
+        sessions.push({ ts: Date.now(), attendees, rounds: 0 });
+        if (sessions.length > 100) sessions = sessions.slice(-100);
+    }
+    closeAttendance();
+    render(); saveData();
+    toast(`✅ 出席確認：${attendees.length} 人`);
+}
+
+// ── Pairs ─────────────────────────────────────────────────
+function openPairs() {
+    requirePro(() => { renderPairsModal(); document.getElementById('pairsOverlay').classList.add('show'); });
+}
+function closePairs() { document.getElementById('pairsOverlay').classList.remove('show'); }
+
+function renderPairsModal() {
+    const list = document.getElementById('pairsList');
+    list.innerHTML = pairs.length
+        ? pairs.map((pr, i) => {
+            const names = pr.ids.map(id => players.find(p=>p.id===id)?.name||'?').join(' ＆ ');
+            return `<div class="pair-item">
+                <span class="pair-type ${pr.type==='together'?'pair-together':'pair-avoid'}">${pr.type==='together'?'固定搭檔':'盡量迴避'}</span>
+                <span class="pair-names">${names}</span>
+                <span class="chip-btn" onclick="removePair(${i})" style="font-size:16px">×</span>
+            </div>`;
+          }).join('')
+        : '<p class="empty-hint">尚未設定任何搭檔關係</p>';
+
+    const options = players.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('pair1Select').innerHTML = options;
+    document.getElementById('pair2Select').innerHTML = options;
+}
+
+function addPair(type) {
+    const id1 = parseInt(document.getElementById('pair1Select').value);
+    const id2 = parseInt(document.getElementById('pair2Select').value);
+    if (id1===id2) { toast('請選擇不同的球員'); return; }
+    if (pairs.find(pr=>pr.ids.includes(id1)&&pr.ids.includes(id2))) { toast('此搭檔關係已存在'); return; }
+    pairs.push({type, ids:[id1, id2]});
+    renderPairsModal(); saveData();
+    toast(type==='together'?'✅ 已設定固定搭檔':'🚫 已設定迴避關係');
+}
+
+function removePair(i) { pairs.splice(i,1); renderPairsModal(); saveData(); }
+
+// ── Assign ────────────────────────────────────────────────
+function randomAssign() {
+    resetCourts();
+    let avail = players.filter(p=>!p.onCourt&&!p.resting&&p.attending)
+        .map(p=>({p, score: p.playCount*settings.playCountWeight - (p.waitRounds||0)*settings.waitWeight + Math.random()*0.4}))
+        .sort((a,b)=>a.score-b.score).map(x=>x.p);
+
+    const toAssign = genderAwareSelect(avail, courtCount*4);
+
+    if (settings.levelBalance) {
+        for (let ci=0;ci<courtCount;ci++) {
+            const grp = toAssign.slice(ci*4, ci*4+4);
+            if (grp.length===4) {
+                grp.sort((a,b)=>b.level-a.level);
+                toAssign[ci*4]=grp[0]; toAssign[ci*4+1]=grp[3];
+                toAssign[ci*4+2]=grp[1]; toAssign[ci*4+3]=grp[2];
+            }
+        }
+    }
+
+    applyPairConstraints(toAssign);
+
+    let idx=0;
+    for (let ci=0;ci<courtCount;ci++)
+        for (let si=0;si<4;si++) {
+            if (idx>=toAssign.length) break;
+            courts[ci][si]=toAssign[idx].id; toAssign[idx].onCourt=true; idx++;
+        }
+
+    render(); saveData();
+    toast('✅ 隨機排場完成');
+}
+
+function genderAwareSelect(avail, total) {
+    const { minMale, minFemale } = settings;
+    if (minMale===0 && minFemale===0) return avail.slice(0, total);
+
+    const males = avail.filter(p=>p.gender==='m');
+    const females = avail.filter(p=>p.gender==='f');
+    const result = [];
+
+    for (let ci=0;ci<courtCount;ci++) {
+        const reserved = [];
+        for (let i=0;i<minMale&&males.length>0;i++) reserved.push(males.shift());
+        for (let i=0;i<minFemale&&females.length>0;i++) reserved.push(females.shift());
+        result.push(...reserved);
+    }
+
+    const usedIds = new Set(result.map(p=>p.id));
+    const rest = avail.filter(p=>!usedIds.has(p.id));
+    for (const p of rest) { if (result.length>=total) break; result.push(p); }
+    return result.slice(0, total);
+}
+
+function applyPairConstraints(arr) {
+    const courtOf = id => {
+        for (let ci=0;ci<courtCount;ci++) {
+            const start=ci*4;
+            if (arr.slice(start,start+4).some(p=>p&&p.id===id)) return ci;
+        }
+        return -1;
+    };
+    pairs.forEach(pr => {
+        const [id1,id2] = pr.ids;
+        const ci1=courtOf(id1), ci2=courtOf(id2);
+        if (ci1===-1||ci2===-1) return;
+        if (pr.type==='together' && ci1!==ci2) {
+            const idx2 = arr.findIndex(p=>p&&p.id===id2);
+            const slot1end = (ci1+1)*4;
+            const swap = arr.slice(ci1*4, slot1end).findIndex(p=>p&&p.id!==id1);
+            if (swap>=0 && idx2>=0) { const tmp=arr[ci1*4+swap]; arr[ci1*4+swap]=arr[idx2]; arr[idx2]=tmp; }
+        }
+        if (pr.type==='avoid' && ci1===ci2) {
+            const idx2 = arr.findIndex(p=>p&&p.id===id2);
+            const otherStart = (ci1===courtCount-1?0:ci1+1)*4;
+            if (otherStart!==ci1*4 && arr[otherStart]) { const tmp=arr[otherStart]; arr[otherStart]=arr[idx2]; arr[idx2]=tmp; }
+        }
+    });
+}
+
+function toggleManual() {
+    manualMode = !manualMode;
+    toast(manualMode?'✋ 點擊空格指定球員，點已排球員可移除':'手動模式關閉');
+    render(); saveData();
+}
+
+function slotClick(ci, si) {
+    if (!manualMode) return;
+    const pid = courts[ci][si];
+    if (pid!==null) { setOnCourt(pid,false); courts[ci][si]=null; render(); saveData(); }
+    else { pendingSlot={ci,si}; openModal(); }
+}
+
+function openModal() {
+    const {ci,si}=pendingSlot;
+    document.getElementById('modalTitle').textContent=`場地 ${ci+1}・${si<2?'A 隊':'B 隊'}・位置 ${(si%2)+1}`;
+    const avail=players.filter(p=>!p.onCourt&&!p.resting&&p.attending);
+    document.getElementById('modalChips').innerHTML=avail.length
+        ?avail.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
+            ${p.name}
+            <span style="font-size:0.75em;font-weight:600;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
+            <span style="font-size:0.75em;color:#999">${p.playCount}場</span>
+          </div>`).join('')
+        :'<span class="empty-hint">沒有可用的球員</span>';
+    document.getElementById('overlay').classList.add('show');
+}
+function pickPlayer(id) { courts[pendingSlot.ci][pendingSlot.si]=id; setOnCourt(id,true); closeModal(); render(); saveData(); }
+function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+function overlayClick(e) { if(e.target.id==='overlay') closeModal(); }
+
+// ── Batch ─────────────────────────────────────────────────
+function openBatch() { requirePro(() => document.getElementById('batchOverlay').classList.add('show')); }
+function closeBatch() { document.getElementById('batchOverlay').classList.remove('show'); }
+
+function saveBatch() {
+    const lines=document.getElementById('batchText').value.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+    let added=0,skipped=0;
+    lines.forEach(line=>{
+        const parts=line.split(',').map(s=>s.trim());
+        const name=parts[0];
+        if (!name||players.find(p=>p.name===name)){skipped++;return;}
+        players.push({id:nextId++,name,gender:GENDER_MAP[parts[1]]||'m',level:LEVEL_MAP[parts[2]]??0,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:''});
+        added++;
+    });
+    document.getElementById('batchText').value='';
+    closeBatch(); render(); saveData();
+    toast(`✅ 新增 ${added} 位${skipped?`，略過 ${skipped} 筆`:''}`)
+}
+
+// ── Round ─────────────────────────────────────────────────
+function saveRecord() {
+    const courtsData=courts.map((c,i)=>({court:i+1,players:c.map(pid=>{if(!pid)return null;const p=players.find(x=>x.id===pid);return p?{name:p.name,gender:p.gender}:null;}).filter(Boolean)})).filter(c=>c.players.length>0);
+    if (!courtsData.length) return;
+    matchRecords.push({ts:Date.now(),courts:courtsData});
+    if (matchRecords.length>200) matchRecords=matchRecords.slice(-200);
+    if (sessions.length>0) sessions[sessions.length-1].rounds++;
+}
+
+function nextRound() {
+    let count=0;
+    const onCourtIds=new Set();
+    courts.forEach(c=>c.forEach(pid=>{if(pid){players.find(p=>p.id===pid).playCount++;onCourtIds.add(pid);count++;}}));
+    if (!count) { toast('場地上沒有球員'); return; }
+    players.forEach(p=>{
+        if (onCourtIds.has(p.id)) p.waitRounds=0;
+        else if (!p.resting&&p.attending) p.waitRounds=(p.waitRounds||0)+1;
+    });
+    saveRecord(); resetCourts(); randomAssign(); saveData();
+    toast('⏭ 下一輪開始！');
+}
+
+function resetCourts() { players.forEach(p=>p.onCourt=false); courts=Array.from({length:courtCount},()=>[null,null,null,null]); }
+
+function clearAll() {
+    if (!confirm('確定清空所有場地嗎？')) return;
+    resetCourts(); render(); saveData();
+}
+
+// ── History ───────────────────────────────────────────────
+let currentTab = 'match';
+
+function openHistory() {
+    requirePro(() => { renderHistory(); document.getElementById('historyOverlay').classList.add('show'); });
+}
+function closeHistory() { document.getElementById('historyOverlay').classList.remove('show'); }
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabMatch').classList.toggle('active', tab==='match');
+    document.getElementById('tabSession').classList.toggle('active', tab==='session');
+    renderHistory();
+}
+
+function renderHistory() {
+    const el = document.getElementById('historyContent');
+    if (currentTab==='match') {
+        if (!matchRecords.length) { el.innerHTML='<p class="empty-hint">尚無對戰紀錄</p>'; return; }
+        const groups={};
+        [...matchRecords].reverse().forEach(r=>{
+            const d=new Date(r.ts);
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (!groups[key]) groups[key]=[];
+            groups[key].push(r);
+        });
+        el.innerHTML=Object.entries(groups).map(([date,records])=>`
+            <div class="history-date">${date}</div>
+            ${records.map(r=>{
+                const t=new Date(r.ts);
+                const time=`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+                return `<div class="history-record">
+                    <div class="history-time">${time}</div>
+                    ${r.courts.map(c=>`<div class="history-court">
+                        <div class="history-court-label">場地 ${c.court}</div>
+                        <div class="history-players">${c.players.map(p=>`<span class="h-chip ${p.gender==='m'?'male':'female'}">${p.name}</span>`).join('')}</div>
+                    </div>`).join('')}
+                </div>`;
+            }).join('')}`).join('');
+    } else {
+        if (!sessions.length) { el.innerHTML='<p class="empty-hint">尚無活動記錄</p>'; return; }
+        el.innerHTML=[...sessions].reverse().map(s=>{
+            const d=new Date(s.ts);
+            const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const time=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            return `<div class="session-card">
+                <div class="session-date">${dateStr} ${time}</div>
+                <div class="session-info">出席 ${s.attendees.length} 人・共 ${s.rounds||0} 輪</div>
+                <div class="session-info" style="margin-top:4px">${s.attendees.join('、')}</div>
+            </div>`;
+        }).join('');
+    }
+}
+
+function clearHistory() {
+    if (!confirm('確定清除所有紀錄？')) return;
+    matchRecords=[]; sessions=[];
+    saveData(); renderHistory();
+    toast('已清除所有紀錄');
+}
+
+function exportData() {
+    let txt = '=== 球員名單 ===\n';
+    txt += '姓名,性別,等級,場數\n';
+    players.forEach(p=>{ txt+=`${p.name},${p.gender==='m'?'男':'女'},${LEVELS[p.level]},${p.playCount}\n`; });
+    txt += '\n=== 對戰紀錄 ===\n';
+    matchRecords.forEach(r=>{
+        const d=new Date(r.ts);
+        const t=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        r.courts.forEach(c=>{ txt+=`${t},場地${c.court},${c.players.map(p=>p.name).join(',')}\n`; });
+    });
+    try {
+        navigator.clipboard.writeText(txt);
+        toast('✅ 已複製到剪貼板');
+    } catch(e) {
+        const a=document.createElement('a');
+        a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
+        a.download='badminton_export.txt'; a.click();
+    }
+}
+
+// ── Settings ──────────────────────────────────────────────
+function openSettings() {
+    requirePro(() => _openSettings());
+}
+function _openSettings() {
+    document.getElementById('playCountWeight').value=settings.playCountWeight;
+    document.getElementById('playCountVal').textContent=settings.playCountWeight.toFixed(1);
+    document.getElementById('waitWeight').value=settings.waitWeight;
+    document.getElementById('waitVal').textContent=settings.waitWeight.toFixed(1);
+    document.getElementById('minMale').value=settings.minMale||0;
+    document.getElementById('minMaleVal').textContent=settings.minMale||0;
+    document.getElementById('minFemale').value=settings.minFemale||0;
+    document.getElementById('minFemaleVal').textContent=settings.minFemale||0;
+    document.getElementById('levelBalance').checked=settings.levelBalance;
+    setFont(settings.fontSize||'medium');
+    document.getElementById('settingsOverlay').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+function saveSettings() {
+    settings.playCountWeight=parseFloat(document.getElementById('playCountWeight').value);
+    settings.waitWeight=parseFloat(document.getElementById('waitWeight').value);
+    settings.minMale=parseInt(document.getElementById('minMale').value);
+    settings.minFemale=parseInt(document.getElementById('minFemale').value);
+    settings.levelBalance=document.getElementById('levelBalance').checked;
+    saveData(); closeSettings();
+    toast('✅ 設定已儲存');
+}
+
+// ── Render ────────────────────────────────────────────────
+function render() {
+    document.getElementById('courtNum').textContent=courtCount;
+    document.getElementById('manualBtn').className='btn btn-outline'+(manualMode?' active':'');
+    renderCourts(); renderWaiting(); renderResting(); renderPlayers();
+}
+
+function renderCourts() {
+    document.getElementById('courtsGrid').innerHTML=courts.map((c,ci)=>`
+        <div class="court-card" style="border-top-color:${COLORS[ci%COLORS.length]}">
+            <div class="court-title">場地 ${ci+1}</div>
+            <div class="team">${slot(ci,0,c[0])}${slot(ci,1,c[1])}</div>
+            <div class="vs-divider">VS</div>
+            <div class="team">${slot(ci,2,c[2])}${slot(ci,3,c[3])}</div>
+        </div>`).join('');
+}
+
+function slot(ci,si,pid) {
+    const p=pid?players.find(x=>x.id===pid):null;
+    const gc=p?(p.gender==='m'?'male':'female'):'';
+    if (manualMode) {
+        if (p) return `<div class="slot filled manual-filled ${gc}" onclick="slotClick(${ci},${si})"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`;
+        return `<div class="slot manual-empty" onclick="slotClick(${ci},${si})">＋ 選擇</div>`;
+    }
+    return p?`<div class="slot filled ${gc}"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`:`<div class="slot">－</div>`;
+}
+
+function renderWaiting() {
+    const w=players.filter(p=>!p.onCourt&&!p.resting&&p.attending).sort((a,b)=>a.playCount-b.playCount);
+    document.getElementById('waitBadge').textContent=w.length;
+    document.getElementById('waitList').innerHTML=w.length
+        ?w.map(p=>`<div class="chip ${p.gender==='m'?'male':'female'}">
+            <span>${p.name}</span>
+            <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
+            <span class="chip-count">${p.playCount}</span>
+            <span class="chip-btn" onclick="toggleRest(${p.id})" title="休息">💤</span>
+          </div>`).join('')
+        :'<span class="empty-hint">目前沒有等待的球員</span>';
+}
+
+function renderResting() {
+    const r=players.filter(p=>p.resting&&p.attending);
+    document.getElementById('restBadge').textContent=r.length;
+    document.getElementById('restSection').style.display=r.length?'block':'none';
+    document.getElementById('restList').innerHTML=r.map(p=>`
+        <div class="chip resting"><span>${p.name}</span>
+        <span class="chip-btn" onclick="toggleRest(${p.id})" title="回到等待">↩️</span></div>`).join('');
+}
+
+function renderPlayers() {
+    document.getElementById('playerBadge').textContent=players.length;
+    document.getElementById('playerList').innerHTML=players.length
+        ?players.map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'} ${p.attending?'':'absent'}">
+            <span>${p.name}</span>
+            <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
+            ${p.note?`<span class="chip-note" title="${p.note}">📝</span>`:''}
+            <span class="chip-count">${p.playCount}</span>
+            <span class="chip-btn" onclick="openNote(${p.id})" title="備註">📝</span>
+            <span class="chip-remove" onclick="removePlayer(${p.id})">×</span>
+          </div>`).join('')
+        :'<span class="empty-hint">尚未新增球員</span>';
+}
+
+function toast(msg) {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js'));
+}
+
+// ── Install prompt ───────────────────────────────────────
+let deferredInstallPrompt = null;
+let installTab = 'android';
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    maybeShowInstallBanner();
+});
+
+window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    dismissInstallBanner();
+});
+
+function isIOS() {
+    return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function isAndroid() {
+    return /Android/.test(navigator.userAgent);
+}
+function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function maybeShowInstallBanner() {
+    if (isStandalone()) return;
+    document.getElementById('installBtn').style.display = '';
+    if (!isIOS() && !isAndroid() && !deferredInstallPrompt) return;
+    // On mobile: show banner every time (session only dismiss)
+    document.getElementById('install-banner').classList.add('show');
+    // Auto-open the guide modal once per device
+    if (!localStorage.getItem('install-guide-shown-lite')) {
+        localStorage.setItem('install-guide-shown-lite', '1');
+        setTimeout(() => openInstallGuide(), 800);
+    }
+}
+
+function dismissInstallBanner() {
+    document.getElementById('install-banner').classList.remove('show');
+}
+
+function openInstallGuide() {
+    installTab = isIOS() ? 'ios' : 'android';
+    switchInstallTab(installTab);
+    document.getElementById('installOverlay').classList.add('show');
+}
+
+function closeInstallGuide() {
+    document.getElementById('installOverlay').classList.remove('show');
+}
+
+function switchInstallTab(tab) {
+    installTab = tab;
+    document.getElementById('tab-android').classList.toggle('active', tab === 'android');
+    document.getElementById('tab-ios').classList.toggle('active', tab === 'ios');
+    document.getElementById('install-android-content').style.display = tab === 'android' ? 'block' : 'none';
+    document.getElementById('install-ios-content').style.display = tab === 'ios' ? 'block' : 'none';
+    if (tab === 'android') {
+        const hasNative = !!deferredInstallPrompt;
+        document.getElementById('install-android-native').style.display = hasNative ? 'block' : 'none';
+        document.getElementById('install-android-or').textContent = hasNative ? '或手動安裝步驟（Chrome 瀏覽器）：' : '手動安裝步驟（Chrome 瀏覽器）：';
+    }
+}
+
+async function triggerInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+        deferredInstallPrompt = null;
+        dismissInstallBanner();
+        closeInstallGuide();
+        toast('✅ 已加入主畫面');
+    }
+}
+
+// ── Tutorial ──────────────────────────────────────────────
+const TUT_STEPS = [
+    {
+        icon: '🏸',
+        title: '歡迎使用羽球排場系統',
+        body: '這個系統幫您<b>自動分配球員上場順序</b>，讓每位球員都能公平輪流。<br><br>接下來將帶您快速了解主要功能。'
+    },
+    {
+        icon: '👤',
+        title: '新增球員',
+        body: '在頁面底部的<b>球員名單</b>區域：<br><br>① 輸入球員姓名<br>② 選擇性別（<span class="tut-tag" style="background:#1a4a7a">男</span> / <span class="tut-tag" style="background:#6a1030">女</span>）<br>③ 選擇程度等級<br>④ 按 <span class="tut-tag">新增</span> 加入，或按 <span class="tut-tag">批量</span> 一次匯入多人'
+    },
+    {
+        icon: '🏟️',
+        title: '場地與出席管理',
+        body: '頂部工具列：<br><br>• <span class="tut-tag">−  2  ＋</span> 調整今日開放的場地數量<br>• <span class="tut-tag">👥</span> 出席管理——標記今天哪些球員到場，只有出席球員才參與排場'
+    },
+    {
+        icon: '🎲',
+        title: '隨機排場',
+        body: '按底部 <span class="tut-tag">🎲 隨機排場</span>，系統會依據：<br><br>• 球員已上場次數（場次少的優先）<br>• 等待輪數（等越久越優先）<br>• 等級均衡（同場避免程度差距過大）<br><br>自動將球員分配到各場地'
+    },
+    {
+        icon: '⏭',
+        title: '結束本輪，開始下一輪',
+        body: '打完一輪後，按 <span class="tut-tag">⏭ 下一輪</span>：<br><br>① 自動記錄本輪對戰名單<br>② 更新每位球員的場次計數<br>③ 清空場地並重新排場<br><br>按 <span class="tut-tag">🔗</span> 可設定<b>固定搭檔</b>或<b>迴避配對</b>的關係'
+    },
+    {
+        icon: '✋',
+        title: '手動模式 & 其他功能',
+        body: '• <span class="tut-tag">✋ 手動</span>：開啟後可點擊場地格子自由指定球員<br>• <span class="tut-tag">💤</span>：將球員標記為休息中，不參與本輪排場<br>• <span class="tut-tag">📋</span>：查看歷史對戰紀錄與活動記錄<br>• <span class="tut-tag">⚙️</span>：調整排場參數（權重、性別比例等）'
+    }
+];
+let tutStep = 0;
+
+function checkTutorial() {
+    if (!localStorage.getItem('tut-done-lite')) {
+        tutStep = 0;
+        renderTutStep();
+        document.getElementById('tut-overlay').classList.add('show');
+    }
+}
+
+function renderTutStep() {
+    const s = TUT_STEPS[tutStep];
+    const total = TUT_STEPS.length;
+    document.getElementById('tut-step-label').textContent = `步驟 ${tutStep + 1} / ${total}`;
+    document.getElementById('tut-icon').textContent = s.icon;
+    document.getElementById('tut-title').textContent = s.title;
+    document.getElementById('tut-body').innerHTML = s.body;
+    document.getElementById('tut-dots').innerHTML = TUT_STEPS.map((_,i) =>
+        `<div class="tut-dot${i===tutStep?' active':''}"></div>`).join('');
+    document.getElementById('tut-prev-btn').style.visibility = tutStep === 0 ? 'hidden' : 'visible';
+    const nextBtn = document.getElementById('tut-next-btn');
+    nextBtn.textContent = tutStep === total - 1 ? '開始使用 ✓' : '下一步';
+    nextBtn.style.background = tutStep === total - 1 ? '#2e7d32' : '#3f51b5';
+}
+
+function tutNext() {
+    if (tutStep < TUT_STEPS.length - 1) { tutStep++; renderTutStep(); }
+    else dismissTutorial();
+}
+
+function tutPrev() {
+    if (tutStep > 0) { tutStep--; renderTutStep(); }
+}
+
+function dismissTutorial() {
+    document.getElementById('tut-overlay').classList.remove('show');
+    localStorage.setItem('tut-done-lite', '1');
+}
+
+loadData();
+applyTheme();
+render();
+maybeShowInstallBanner();
+checkTutorial();
+</script>
+</body>
+</html>

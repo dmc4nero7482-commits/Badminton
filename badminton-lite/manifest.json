@@ -1,0 +1,18 @@
+{
+  "name": "羽球排場 Lite",
+  "short_name": "排場Lite",
+  "description": "羽毛球排場系統 Lite 版",
+  "start_url": "./badminton-lite.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1976d2",
+  "background_color": "#f0f4f8",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
