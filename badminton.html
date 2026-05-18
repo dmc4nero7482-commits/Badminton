@@ -21,138 +21,121 @@
             --text: #212121;
             --text-light: #757575;
             --border: #e0e0e0;
-            --male-bg: #e3f2fd;
-            --male-border: #90caf9;
-            --male-text: #1565c0;
-            --female-bg: #fce4ec;
-            --female-border: #f48fb1;
-            --female-text: #880e4f;
+            --shadow: rgba(0,0,0,0.08);
+            --male-bg: #e3f2fd; --male-border: #90caf9; --male-text: #1565c0;
+            --female-bg: #fce4ec; --female-border: #f48fb1; --female-text: #880e4f;
+        }
+        [data-theme="dark"] {
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0;
+            --text-light: #9e9e9e; --border: #333; --shadow: rgba(0,0,0,0.3);
+            --male-bg: #0d2a4a; --male-border: #3949ab; --male-text: #90caf9;
+            --female-bg: #3b0a1e; --female-border: #ad1457; --female-text: #f48fb1;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 80px;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding-bottom: 80px;
+            transition: background 0.2s, color 0.2s;
         }
+        body[data-font="small"]  { font-size: 12px; }
+        body[data-font="medium"] { font-size: 14px; }
+        body[data-font="large"]  { font-size: 16px; }
+
+        /* Header */
         .header {
-            background: var(--primary);
-            color: white;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: var(--primary); color: white;
+            padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25); position: sticky; top: 0; z-index: 100;
         }
-        .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .btn-icon {
-            background: transparent; border: none; color: white;
-            font-size: 20px; cursor: pointer; padding: 4px; opacity: 0.9;
-        }
-        .court-ctrl { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .header h1 { font-size: 1.2em; font-weight: 700; }
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .court-ctrl { display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
         .btn-circle {
-            width: 30px; height: 30px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.7);
-            background: transparent; color: white; font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            line-height: 1; transition: background 0.15s;
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.7); background: transparent; color: white;
+            font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
         .btn-circle:hover { background: rgba(255,255,255,0.2); }
-        .court-num { font-size: 18px; font-weight: 700; min-width: 20px; text-align: center; }
+        .court-num { font-size: 1.1em; font-weight: 700; min-width: 20px; text-align: center; }
+        .btn-icon { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; padding: 3px; opacity: 0.9; }
+        .btn-icon:hover { opacity: 1; }
+
+        /* Layout */
         .container { padding: 12px; max-width: 1200px; margin: 0 auto; }
-        .courts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 12px; margin-bottom: 12px;
-        }
+        .courts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px; }
         .court-card {
             background: var(--card); border-radius: 14px; padding: 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-top: 5px solid #2196F3;
+            box-shadow: 0 2px 6px var(--shadow); border-top: 5px solid #2196F3;
         }
-        .court-title {
-            font-size: 13px; font-weight: 700; color: var(--text-light);
-            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
-        }
+        .court-title { font-size: 0.85em; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
         .team { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .vs-divider {
-            display: flex; align-items: center; gap: 6px; margin: 8px 0;
-            color: var(--text-light); font-size: 11px; font-weight: 700;
-        }
+        .vs-divider { display: flex; align-items: center; gap: 6px; margin: 8px 0; color: var(--text-light); font-size: 0.78em; font-weight: 700; }
         .vs-divider::before, .vs-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
         .slot {
             min-height: 44px; border-radius: 8px; border: 2px dashed #90caf9;
-            background: #e3f2fd; display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 600; color: #1565c0;
-            transition: all 0.15s; padding: 4px 6px; text-align: center;
-            flex-direction: column; gap: 2px;
+            background: var(--male-bg); display: flex; align-items: center; justify-content: center;
+            font-size: 0.9em; font-weight: 600; color: var(--male-text);
+            transition: all 0.15s; padding: 4px 6px; text-align: center; flex-direction: column; gap: 2px;
         }
         .slot.filled { border-style: solid; }
         .slot.filled.male { border-color: var(--male-border); background: var(--male-bg); color: var(--male-text); }
         .slot.filled.female { border-color: var(--female-border); background: var(--female-bg); color: var(--female-text); }
         .slot.manual-empty { cursor: pointer; border-color: #a5d6a7; background: #e8f5e9; color: #2e7d32; }
-        .slot.manual-empty:hover { background: #c8e6c9; }
+        [data-theme="dark"] .slot.manual-empty { background: #1b3a1e; color: #81c784; }
+        .slot.manual-empty:hover { opacity: 0.8; }
         .slot.manual-filled { cursor: pointer; }
         .slot.manual-filled:hover { opacity: 0.7; }
-        .slot-level { font-size: 10px; opacity: 0.65; }
-        .section {
-            background: var(--card); border-radius: 14px; padding: 14px;
-            margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-        .section-header {
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
-        }
-        .section-title { font-size: 15px; font-weight: 700; }
-        .badge {
-            background: var(--primary); color: white;
-            border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600;
-        }
+        .slot-level { font-size: 0.72em; opacity: 0.65; }
+
+        /* Section */
+        .section { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px var(--shadow); }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .section-title { font-size: 1em; font-weight: 700; }
+        .badge { background: var(--primary); color: white; border-radius: 12px; padding: 2px 10px; font-size: 0.8em; font-weight: 600; }
+
+        /* Chips */
         .chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .chip {
-            border-radius: 20px; padding: 6px 10px; font-size: 13px; font-weight: 500;
+            border-radius: 20px; padding: 6px 10px; font-size: 0.9em; font-weight: 500;
             display: flex; align-items: center; gap: 5px;
-            border: 1.5px solid var(--border); background: #fafafa;
+            border: 1.5px solid var(--border); background: var(--card);
         }
         .chip.male { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
         .chip.female { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
-        .chip.playing.male { background: #bbdefb; }
-        .chip.playing.female { background: #f8bbd0; }
+        .chip.playing.male { filter: brightness(0.92); }
+        .chip.playing.female { filter: brightness(0.92); }
         .chip.resting { background: #f3e5f5; border-color: #ce93d8; color: #6a1b9a; }
-        .chip-count { background: #bdbdbd; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
-        .chip-level { font-size: 10px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-        .chip-remove { color: #bdbdbd; font-size: 17px; line-height: 1; cursor: pointer; transition: color 0.15s; }
-        .chip-remove:hover { color: var(--danger); }
-        .chip-btn { font-size: 14px; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.15s; }
+        [data-theme="dark"] .chip.resting { background: #2a1040; border-color: #7b1fa2; color: #ce93d8; }
+        .chip.absent { opacity: 0.4; }
+        .chip-count { background: #bdbdbd; color: white; border-radius: 10px; padding: 1px 7px; font-size: 0.78em; }
+        .chip-level { font-size: 0.72em; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+        .chip-btn { font-size: 0.9em; line-height: 1; cursor: pointer; opacity: 0.55; transition: opacity 0.15s; }
         .chip-btn:hover { opacity: 1; }
-        .empty-hint { color: var(--text-light); font-size: 13px; padding: 6px 0; }
+        .chip-remove { color: #bdbdbd; font-size: 1.1em; line-height: 1; cursor: pointer; transition: color 0.15s; }
+        .chip-remove:hover { color: var(--danger); }
+        .chip-note { font-size: 0.72em; color: var(--text-light); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .empty-hint { color: var(--text-light); font-size: 0.9em; padding: 6px 0; }
+
+        /* Add form */
         .add-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
         .add-row { display: flex; gap: 8px; }
-        .add-row input[type="text"] {
+        .add-row input[type="text"], .add-row select {
             flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
-            padding: 9px 12px; font-size: 14px; outline: none; transition: border-color 0.15s;
+            padding: 9px 12px; font-size: 0.95em; outline: none;
+            background: var(--card); color: var(--text); transition: border-color 0.15s;
         }
-        .add-row input[type="text"]:focus { border-color: var(--primary); }
-        .add-row select {
-            flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
-            padding: 9px 10px; font-size: 14px; outline: none; background: white;
-        }
-        .add-row select:focus { border-color: var(--primary); }
+        .add-row input[type="text"]:focus, .add-row select:focus { border-color: var(--primary); }
         .gender-btns { display: flex; gap: 4px; }
         .btn-gender {
-            padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--border);
-            font-size: 14px; font-weight: 600; cursor: pointer; background: white;
-            color: var(--text-light); transition: all 0.15s;
+            padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+            font-size: 0.9em; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text-light);
         }
         .btn-gender.male.active { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
         .btn-gender.female.active { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
-        .btn {
-            padding: 10px 14px; border-radius: 9px; border: none;
-            font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center;
-        }
+
+        /* Buttons */
+        .btn { padding: 10px 14px; border-radius: 9px; border: none; font-size: 0.95em; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; }
         .btn:active { transform: scale(0.97); }
         .btn:disabled { opacity: 0.45; cursor: not-allowed; }
         .btn-primary { background: var(--primary); color: white; }
@@ -161,16 +144,21 @@
         .btn-success:hover:not(:disabled) { background: #2e7d32; }
         .btn-warning { background: var(--warning); color: white; }
         .btn-warning:hover:not(:disabled) { background: #e65100; }
-        .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-outline:hover:not(:disabled) { background: #e3f2fd; }
+        .btn-outline { background: var(--card); border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover:not(:disabled) { background: var(--male-bg); }
         .btn-outline.active { background: var(--primary); color: white; }
-        .btn-sm { padding: 6px 10px; font-size: 12px; }
+        .btn-sm { padding: 6px 10px; font-size: 0.82em; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Action bar */
         .action-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; background: white;
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
             border-top: 1px solid var(--border); padding: 10px 12px;
-            display: flex; gap: 8px; box-shadow: 0 -2px 8px rgba(0,0,0,0.1); z-index: 100;
+            display: flex; gap: 8px; box-shadow: 0 -2px 8px var(--shadow); z-index: 100;
         }
-        .action-bar .btn { flex: 1; font-size: 13px; padding: 10px 6px; }
+        .action-bar .btn { flex: 1; font-size: 0.82em; padding: 10px 4px; }
+
+        /* Overlays / Modals */
         .overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.5); z-index: 200;
@@ -178,68 +166,91 @@
         }
         .overlay.show { display: flex; }
         .modal {
-            background: white; border-radius: 16px; padding: 20px;
-            width: 100%; max-width: 420px; max-height: 82vh; overflow-y: auto;
+            background: var(--card); border-radius: 16px; padding: 20px;
+            width: 100%; max-width: 440px; max-height: 84vh; overflow-y: auto;
         }
-        .modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+        .modal h3 { font-size: 1em; font-weight: 700; margin-bottom: 14px; }
         .modal-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
         .mchip {
             padding: 8px 14px; border-radius: 20px; border: 2px solid var(--border);
-            font-size: 14px; cursor: pointer; transition: all 0.15s;
+            font-size: 0.95em; cursor: pointer; transition: all 0.15s;
             display: flex; align-items: center; gap: 6px;
+            background: var(--card); color: var(--text);
         }
         .mchip.male { background: var(--male-bg); border-color: var(--male-border); color: var(--male-text); }
         .mchip.female { background: var(--female-bg); border-color: var(--female-border); color: var(--female-text); }
-        .mchip:hover { filter: brightness(0.95); }
-        .modal-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .mchip:hover { filter: brightness(0.93); }
+        .modal-btns { display: flex; gap: 8px; margin-top: 14px; }
         .modal-btns .btn { flex: 1; }
-        .batch-hint { font-size: 12px; color: var(--text-light); margin-bottom: 10px; line-height: 1.7; }
-        .batch-textarea {
-            width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
-            padding: 10px 12px; font-size: 13px; font-family: inherit;
-            resize: vertical; min-height: 160px; outline: none;
+
+        /* Attendance */
+        .attend-chip {
+            padding: 8px 12px; border-radius: 12px; border: 2px solid var(--border);
+            font-size: 0.9em; cursor: pointer; display: flex; align-items: center; gap: 6px;
+            background: var(--card); color: var(--text); transition: all 0.15s;
         }
-        .batch-textarea:focus { border-color: var(--primary); }
-        .history-date { font-size: 12px; color: var(--text-light); font-weight: 700; margin: 14px 0 6px; }
-        .history-record { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
-        .history-time { font-size: 11px; color: var(--text-light); margin-bottom: 6px; }
-        .history-court { margin-top: 6px; }
-        .history-court-label { font-size: 11px; color: var(--text-light); font-weight: 600; }
-        .history-players { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
-        .h-chip { padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 500; }
-        .h-chip.male { background: var(--male-bg); color: var(--male-text); }
-        .h-chip.female { background: var(--female-bg); color: var(--female-text); }
+        .attend-chip.present { border-color: var(--success); background: #e8f5e9; color: #2e7d32; }
+        [data-theme="dark"] .attend-chip.present { background: #1b3a1e; color: #81c784; }
+        .attend-chip.absent-mark { opacity: 0.45; }
+
+        /* Pairs */
+        .pair-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px; background: var(--bg); margin-bottom: 6px; }
+        .pair-type { font-size: 0.78em; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+        .pair-together { background: #e8f5e9; color: #2e7d32; }
+        .pair-avoid { background: #ffebee; color: #c62828; }
+        [data-theme="dark"] .pair-together { background: #1b3a1e; color: #81c784; }
+        [data-theme="dark"] .pair-avoid { background: #3b0a0a; color: #ef9a9a; }
+        .pair-names { flex: 1; font-size: 0.9em; font-weight: 500; }
+
+        /* Settings */
         .settings-group { margin-bottom: 18px; }
-        .settings-label {
-            display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text);
-        }
-        .settings-hint { display: block; font-size: 11px; color: var(--text-light); font-weight: 400; margin-top: 2px; }
+        .settings-label { display: block; font-size: 0.95em; font-weight: 600; margin-bottom: 6px; }
+        .settings-hint { display: block; font-size: 0.78em; color: var(--text-light); font-weight: 400; margin-top: 2px; }
         .settings-row { display: flex; align-items: center; gap: 10px; }
         .settings-row input[type="range"] { flex: 1; accent-color: var(--primary); }
-        .settings-val { font-size: 14px; font-weight: 700; color: var(--primary); min-width: 32px; text-align: right; }
+        .settings-val { font-size: 0.95em; font-weight: 700; color: var(--primary); min-width: 32px; text-align: right; }
         .toggle-wrap { display: flex; align-items: center; cursor: pointer; }
         .toggle-wrap input { display: none; }
-        .toggle {
-            width: 44px; height: 24px; border-radius: 12px; background: #ccc;
-            position: relative; transition: background 0.2s;
-        }
-        .toggle::after {
-            content: ''; position: absolute; top: 3px; left: 3px;
-            width: 18px; height: 18px; border-radius: 50%; background: white;
-            transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
+        .toggle { width: 44px; height: 24px; border-radius: 12px; background: #ccc; position: relative; transition: background 0.2s; }
+        .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
         .toggle-wrap input:checked + .toggle { background: var(--primary); }
         .toggle-wrap input:checked + .toggle::after { transform: translateX(20px); }
-        .toast {
-            position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
-            background: rgba(33,33,33,0.9); color: white;
-            padding: 10px 20px; border-radius: 24px; font-size: 13px; z-index: 999;
-            opacity: 0; transition: opacity 0.25s; white-space: nowrap; pointer-events: none;
-        }
+        .radio-group { display: flex; gap: 8px; }
+        .radio-btn { padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 0.88em; cursor: pointer; background: var(--card); color: var(--text); font-weight: 600; transition: all 0.15s; }
+        .radio-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* History */
+        .history-date { font-size: 0.8em; color: var(--text-light); font-weight: 700; margin: 14px 0 6px; }
+        .history-record { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+        .history-time { font-size: 0.75em; color: var(--text-light); margin-bottom: 6px; }
+        .history-court { margin-top: 6px; }
+        .history-court-label { font-size: 0.75em; color: var(--text-light); font-weight: 600; }
+        .history-players { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+        .h-chip { padding: 2px 8px; border-radius: 10px; font-size: 0.8em; font-weight: 500; }
+        .h-chip.male { background: var(--male-bg); color: var(--male-text); }
+        .h-chip.female { background: var(--female-bg); color: var(--female-text); }
+        .session-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+        .session-date { font-weight: 700; font-size: 0.9em; }
+        .session-info { font-size: 0.8em; color: var(--text-light); margin-top: 3px; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 14px; }
+        .tab-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--card); color: var(--text-light); font-size: 0.88em; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* Note modal */
+        .note-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.9em; font-family: inherit; resize: vertical; min-height: 80px; outline: none; background: var(--card); color: var(--text); }
+        .note-textarea:focus { border-color: var(--primary); }
+
+        /* Batch */
+        .batch-hint { font-size: 0.8em; color: var(--text-light); margin-bottom: 10px; line-height: 1.7; }
+        .batch-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.88em; font-family: inherit; resize: vertical; min-height: 160px; outline: none; background: var(--card); color: var(--text); }
+        .batch-textarea:focus { border-color: var(--primary); }
+
+        .toast { position: fixed; top: 68px; left: 50%; transform: translateX(-50%); background: rgba(33,33,33,0.92); color: white; padding: 10px 20px; border-radius: 24px; font-size: 0.9em; z-index: 999; opacity: 0; transition: opacity 0.25s; white-space: nowrap; pointer-events: none; }
         .toast.show { opacity: 1; }
+
         @media (max-width: 480px) {
-            .header h1 { font-size: 16px; }
-            .action-bar .btn { font-size: 12px; }
+            .header h1 { font-size: 1em; }
+            .action-bar .btn { font-size: 0.75em; }
             .courts-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -255,8 +266,11 @@
             <span class="court-num" id="courtNum">2</span>
             <button class="btn-circle" onclick="changeCourts(1)">+</button>
         </div>
-        <button class="btn-icon" onclick="openHistory()" title="對戰紀錄">📋</button>
-        <button class="btn-icon" onclick="openSettings()" title="排場設定">⚙️</button>
+        <button class="btn-icon" onclick="openAttendance()" title="出席">👥</button>
+        <button class="btn-icon" onclick="openHistory()" title="紀錄">📋</button>
+        <button class="btn-icon" onclick="openPairs()" title="搭檔設定">🔗</button>
+        <button class="btn-icon" onclick="openSettings()" title="設定">⚙️</button>
+        <button class="btn-icon" id="darkBtn" onclick="toggleDark()" title="深色模式">🌙</button>
     </div>
 </div>
 
@@ -296,12 +310,9 @@
             </div>
             <div class="add-row">
                 <select id="levelSelect">
-                    <option value="0">新手</option>
-                    <option value="1">初中</option>
-                    <option value="2">中階</option>
-                    <option value="3">中進</option>
-                    <option value="4">高階</option>
-                    <option value="5">職業</option>
+                    <option value="0">新手</option><option value="1">初中</option>
+                    <option value="2">中階</option><option value="3">中進</option>
+                    <option value="4">高階</option><option value="5">職業</option>
                 </select>
                 <button class="btn btn-primary" onclick="addPlayer()">新增</button>
                 <button class="btn btn-outline" onclick="openBatch()">批量</button>
@@ -322,23 +333,33 @@
     <div class="modal">
         <h3 id="modalTitle">選擇球員</h3>
         <div class="modal-chips" id="modalChips"></div>
+        <div class="modal-btns"><button class="btn btn-outline" onclick="closeModal()">取消</button></div>
+    </div>
+</div>
+
+<!-- 出席管理 -->
+<div class="overlay" id="attendanceOverlay" onclick="if(event.target.id==='attendanceOverlay')closeAttendance()">
+    <div class="modal">
+        <h3>👥 今日出席</h3>
+        <p style="font-size:0.82em;color:var(--text-light);margin-bottom:12px">點選球員切換出席/缺席，只有出席球員才會參與排場</p>
+        <div class="chips" id="attendanceList" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button class="btn btn-outline btn-sm" onclick="setAllAttendance(true)">全部出席</button>
+            <button class="btn btn-outline btn-sm" onclick="setAllAttendance(false)">全部缺席</button>
+        </div>
         <div class="modal-btns">
-            <button class="btn btn-outline" onclick="closeModal()">取消</button>
+            <button class="btn btn-outline" onclick="closeAttendance()">取消</button>
+            <button class="btn btn-primary" onclick="saveAttendance()">確認出席</button>
         </div>
     </div>
 </div>
 
 <!-- 批量新增 -->
-<div class="overlay" id="batchOverlay" onclick="batchOverlayClick(event)">
+<div class="overlay" id="batchOverlay" onclick="if(event.target.id==='batchOverlay')closeBatch()">
     <div class="modal">
         <h3>批量新增球員</h3>
-        <p class="batch-hint">
-            格式：姓名,性別,等級（每行一筆）<br>
-            性別：男 / 女<br>
-            等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業
-        </p>
-        <textarea class="batch-textarea" id="batchText"
-            placeholder="小明,男,初中&#10;小華,女,新手&#10;小李,男,中階"></textarea>
+        <p class="batch-hint">格式：姓名,性別,等級（每行一筆）<br>性別：男 / 女　　等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業</p>
+        <textarea class="batch-textarea" id="batchText" placeholder="小明,男,初中&#10;小華,女,新手&#10;小李,男,中階"></textarea>
         <div class="modal-btns">
             <button class="btn btn-outline" onclick="closeBatch()">取消</button>
             <button class="btn btn-primary" onclick="saveBatch()">新增</button>
@@ -346,14 +367,63 @@
     </div>
 </div>
 
+<!-- 備註編輯 -->
+<div class="overlay" id="noteOverlay" onclick="if(event.target.id==='noteOverlay')closeNote()">
+    <div class="modal" style="max-width:360px">
+        <h3 id="noteTitle">📝 球員備註</h3>
+        <textarea class="note-textarea" id="noteInput" placeholder="輸入備註（例如：膝蓋傷、只打雙打...）"></textarea>
+        <div class="modal-btns">
+            <button class="btn btn-outline" onclick="closeNote()">取消</button>
+            <button class="btn btn-primary" onclick="saveNote()">儲存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 搭檔設定 -->
+<div class="overlay" id="pairsOverlay" onclick="if(event.target.id==='pairsOverlay')closePairs()">
+    <div class="modal" style="max-width:440px">
+        <h3>🔗 搭檔設定</h3>
+        <div id="pairsList" style="margin-bottom:14px"></div>
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+            <p style="font-size:0.85em;font-weight:600;margin-bottom:8px">新增關係</p>
+            <div class="add-row" style="margin-bottom:8px">
+                <select id="pair1Select" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:0.9em;background:var(--card);color:var(--text)"></select>
+                <select id="pair2Select" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px;font-size:0.9em;background:var(--card);color:var(--text)"></select>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-success btn-sm" style="flex:1" onclick="addPair('together')">✅ 固定搭檔</button>
+                <button class="btn btn-danger btn-sm" style="flex:1" onclick="addPair('avoid')">🚫 盡量迴避</button>
+            </div>
+        </div>
+        <div class="modal-btns"><button class="btn btn-outline" onclick="closePairs()">關閉</button></div>
+    </div>
+</div>
+
+<!-- 對戰紀錄 & 活動歷史 -->
+<div class="overlay" id="historyOverlay" onclick="if(event.target.id==='historyOverlay')closeHistory()">
+    <div class="modal" style="max-width:480px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0">📋 紀錄</h3>
+            <button class="btn btn-outline btn-sm" onclick="exportData()">📤 匯出</button>
+        </div>
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tabMatch" onclick="switchTab('match')">對戰紀錄</button>
+            <button class="tab-btn" id="tabSession" onclick="switchTab('session')">活動歷史</button>
+        </div>
+        <div id="historyContent"></div>
+        <div class="modal-btns">
+            <button class="btn btn-outline btn-sm" onclick="clearHistory()">清除紀錄</button>
+            <button class="btn btn-outline" onclick="closeHistory()">關閉</button>
+        </div>
+    </div>
+</div>
+
 <!-- 排場設定 -->
-<div class="overlay" id="settingsOverlay" onclick="settingsOverlayClick(event)">
-    <div class="modal" style="max-width:380px">
+<div class="overlay" id="settingsOverlay" onclick="if(event.target.id==='settingsOverlay')closeSettings()">
+    <div class="modal" style="max-width:400px">
         <h3>⚙️ 排場參數設定</h3>
         <div class="settings-group">
-            <label class="settings-label">對戰次數權重
-                <span class="settings-hint">數值越高，場數少的球員越優先</span>
-            </label>
+            <label class="settings-label">對戰次數權重<span class="settings-hint">數值越高，場數少的球員越優先</span></label>
             <div class="settings-row">
                 <input type="range" id="playCountWeight" min="0" max="10" step="0.1" value="1"
                     oninput="document.getElementById('playCountVal').textContent=parseFloat(this.value).toFixed(1)">
@@ -361,9 +431,7 @@
             </div>
         </div>
         <div class="settings-group">
-            <label class="settings-label">等待輪數權重
-                <span class="settings-hint">數值越高，等越久的球員越優先</span>
-            </label>
+            <label class="settings-label">等待輪數權重<span class="settings-hint">數值越高，等越久的球員越優先</span></label>
             <div class="settings-row">
                 <input type="range" id="waitWeight" min="0" max="10" step="0.1" value="1"
                     oninput="document.getElementById('waitVal').textContent=parseFloat(this.value).toFixed(1)">
@@ -371,31 +439,36 @@
             </div>
         </div>
         <div class="settings-group">
-            <label class="settings-label">等級均衡
-                <span class="settings-hint">開啟後同場四人會盡量分散程度等級</span>
-            </label>
-            <label class="toggle-wrap">
-                <input type="checkbox" id="levelBalance" checked>
-                <span class="toggle"></span>
-            </label>
+            <label class="settings-label">每場最少男性<span class="settings-hint">每個場地至少幾位男性球員</span></label>
+            <div class="settings-row">
+                <input type="range" id="minMale" min="0" max="4" step="1" value="0"
+                    oninput="document.getElementById('minMaleVal').textContent=this.value">
+                <span class="settings-val" id="minMaleVal">0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">每場最少女性<span class="settings-hint">每個場地至少幾位女性球員</span></label>
+            <div class="settings-row">
+                <input type="range" id="minFemale" min="0" max="4" step="1" value="0"
+                    oninput="document.getElementById('minFemaleVal').textContent=this.value">
+                <span class="settings-val" id="minFemaleVal">0</span>
+            </div>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">等級均衡<span class="settings-hint">同場四人盡量分散程度等級</span></label>
+            <label class="toggle-wrap"><input type="checkbox" id="levelBalance" checked><span class="toggle"></span></label>
+        </div>
+        <div class="settings-group">
+            <label class="settings-label">字體大小</label>
+            <div class="radio-group">
+                <button class="radio-btn" id="fontSmall" onclick="setFont('small')">小</button>
+                <button class="radio-btn active" id="fontMedium" onclick="setFont('medium')">中</button>
+                <button class="radio-btn" id="fontLarge" onclick="setFont('large')">大</button>
+            </div>
         </div>
         <div class="modal-btns">
             <button class="btn btn-outline" onclick="closeSettings()">取消</button>
             <button class="btn btn-primary" onclick="saveSettings()">儲存</button>
-        </div>
-    </div>
-</div>
-
-<!-- 對戰紀錄 -->
-<div class="overlay" id="historyOverlay" onclick="historyOverlayClick(event)">
-    <div class="modal" style="max-width:480px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <h3 style="margin:0">📋 對戰紀錄</h3>
-            <button class="btn btn-outline btn-sm" onclick="clearHistory()">清除</button>
-        </div>
-        <div id="historyContent"></div>
-        <div class="modal-btns">
-            <button class="btn btn-outline" onclick="closeHistory()">關閉</button>
         </div>
     </div>
 </div>
@@ -407,305 +480,479 @@ const COLORS = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#F44336','#00BCD4','#79
 const LEVELS = ['新手','初中','中階','中進','高階','職業'];
 const LEVEL_COLORS = ['#4CAF50','#e91e8c','#FF9800','#29B6F6','#757575','#212121'];
 const GENDER_MAP = {'男':'m','男性':'m','m':'m','1':'m','女':'f','女性':'f','f':'f','0':'f'};
-const LEVEL_MAP = {'新手':0,'初中':1,'中階':2,'中進':3,'高階':4,'職業':5,'0':0,'1':1,'2':2,'3':3,'4':4,'5':5};
+const LEVEL_MAP  = {'新手':0,'初中':1,'中階':2,'中進':3,'高階':4,'職業':5,'0':0,'1':1,'2':2,'3':3,'4':4,'5':5};
 
-let players = [], courts = [], matchRecords = [];
-let courtCount = 2, nextId = 1, manualMode = false, pendingSlot = null, selectedGender = 'm';
-let settings = { playCountWeight: 1.0, waitWeight: 1.0, levelBalance: true };
+let players=[], courts=[], matchRecords=[], sessions=[], pairs=[];
+let courtCount=2, nextId=1, manualMode=false, pendingSlot=null, selectedGender='m';
+let settings = { playCountWeight:1.0, waitWeight:1.0, levelBalance:true, minMale:0, minFemale:0, darkMode:false, fontSize:'medium' };
+let editingNoteId = null, historyTab = 'match';
 
+// ── Persistence ──────────────────────────────────────────
 function saveData() {
-    localStorage.setItem('badminton', JSON.stringify({ players, courts, courtCount, nextId, matchRecords, settings, manualMode }));
+    localStorage.setItem('badminton', JSON.stringify({
+        players, courts, courtCount, nextId, matchRecords, sessions, pairs, settings, manualMode
+    }));
 }
 
 function loadData() {
     try {
         const d = JSON.parse(localStorage.getItem('badminton'));
         if (d) {
-            players = (d.players || []).map(p => ({ gender: 'm', level: 0, resting: false, waitRounds: 0, ...p }));
-            if (d.settings) settings = { ...settings, ...d.settings };
-            if (d.manualMode !== undefined) manualMode = d.manualMode;
-            courts = d.courts || [];
-            courtCount = d.courtCount || 2;
-            nextId = d.nextId || 1;
-            matchRecords = d.matchRecords || [];
+            players = (d.players||[]).map(p=>({gender:'m',level:0,resting:false,waitRounds:0,attending:true,note:'',...p}));
+            courts = d.courts||[];
+            courtCount = d.courtCount||2;
+            nextId = d.nextId||1;
+            matchRecords = d.matchRecords||[];
+            sessions = d.sessions||[];
+            pairs = d.pairs||[];
+            if (d.settings) settings = {...settings,...d.settings};
+            if (d.manualMode!==undefined) manualMode = d.manualMode;
             while (courts.length < courtCount) courts.push([null,null,null,null]);
             courts = courts.slice(0, courtCount);
             return;
         }
     } catch(e) {}
-    for (let i = 0; i < courtCount; i++) courts.push([null,null,null,null]);
+    for (let i=0;i<courtCount;i++) courts.push([null,null,null,null]);
 }
 
-function setGender(g) {
-    selectedGender = g;
-    document.getElementById('genderM').classList.toggle('active', g === 'm');
-    document.getElementById('genderF').classList.toggle('active', g === 'f');
+// ── Theme & Font ──────────────────────────────────────────
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', settings.darkMode ? 'dark' : '');
+    document.body.setAttribute('data-font', settings.fontSize||'medium');
+    document.getElementById('darkBtn').textContent = settings.darkMode ? '☀️' : '🌙';
+    const fm = settings.fontSize||'medium';
+    ['fontSmall','fontMedium','fontLarge'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('fontSmall').classList.toggle('active', fm==='small');
+    document.getElementById('fontMedium').classList.toggle('active', fm==='medium');
+    document.getElementById('fontLarge').classList.toggle('active', fm==='large');
 }
 
+function toggleDark() {
+    settings.darkMode = !settings.darkMode;
+    applyTheme(); saveData();
+}
+
+function setFont(size) {
+    settings.fontSize = size;
+    applyTheme();
+}
+
+// ── Courts ────────────────────────────────────────────────
 function changeCourts(d) {
     const n = courtCount + d;
-    if (n < 1 || n > 10) return;
-    if (d < 0) {
-        courts[courtCount-1].forEach(pid => { if (pid) setOnCourt(pid, false); });
-        courts.pop();
-    } else {
-        courts.push([null,null,null,null]);
-    }
+    if (n<1||n>10) return;
+    if (d<0) { courts[courtCount-1].forEach(pid=>{if(pid)setOnCourt(pid,false);}); courts.pop(); }
+    else courts.push([null,null,null,null]);
     courtCount = n;
     render(); saveData();
+}
+
+// ── Players ───────────────────────────────────────────────
+function setGender(g) {
+    selectedGender = g;
+    document.getElementById('genderM').classList.toggle('active', g==='m');
+    document.getElementById('genderF').classList.toggle('active', g==='f');
 }
 
 function addPlayer() {
     const inp = document.getElementById('nameInput');
     const name = inp.value.trim();
     if (!name) { toast('請輸入球員姓名'); return; }
-    if (players.find(p => p.name === name)) { toast('球員名稱重複'); return; }
+    if (players.find(p=>p.name===name)) { toast('球員名稱重複'); return; }
     const level = parseInt(document.getElementById('levelSelect').value);
-    players.push({ id: nextId++, name, gender: selectedGender, level, playCount: 0, onCourt: false, resting: false });
+    players.push({id:nextId++, name, gender:selectedGender, level, playCount:0, onCourt:false, resting:false, waitRounds:0, attending:true, note:''});
     inp.value = '';
     render(); saveData();
 }
 
 function removePlayer(id) {
-    const p = players.find(p => p.id === id);
-    if (p && p.onCourt) { toast('請先將球員從場地移除'); return; }
-    players = players.filter(p => p.id !== id);
-    courts.forEach(c => { for(let i=0;i<4;i++) if(c[i]===id) c[i]=null; });
+    const p = players.find(p=>p.id===id);
+    if (p&&p.onCourt) { toast('請先將球員從場地移除'); return; }
+    players = players.filter(p=>p.id!==id);
+    courts.forEach(c=>{for(let i=0;i<4;i++) if(c[i]===id) c[i]=null;});
+    pairs = pairs.filter(pr=>!pr.ids.includes(id));
     render(); saveData();
 }
 
 function toggleRest(id) {
-    const p = players.find(p => p.id === id);
-    if (!p || p.onCourt) { toast('請先將球員從場地移除'); return; }
+    const p = players.find(p=>p.id===id);
+    if (!p||p.onCourt) { toast('請先將球員從場地移除'); return; }
     p.resting = !p.resting;
     render(); saveData();
 }
 
-function setOnCourt(id, val) {
-    const p = players.find(p => p.id === id);
-    if (p) p.onCourt = val;
+function setOnCourt(id, val) { const p=players.find(p=>p.id===id); if(p) p.onCourt=val; }
+
+// ── Notes ─────────────────────────────────────────────────
+function openNote(id) {
+    editingNoteId = id;
+    const p = players.find(p=>p.id===id);
+    document.getElementById('noteTitle').textContent = `📝 ${p.name} 的備註`;
+    document.getElementById('noteInput').value = p.note||'';
+    document.getElementById('noteOverlay').classList.add('show');
+}
+function closeNote() { document.getElementById('noteOverlay').classList.remove('show'); }
+function saveNote() {
+    const p = players.find(p=>p.id===editingNoteId);
+    if (p) p.note = document.getElementById('noteInput').value.trim();
+    closeNote(); render(); saveData();
 }
 
+// ── Attendance ────────────────────────────────────────────
+let tempAttendance = {};
+
+function openAttendance() {
+    tempAttendance = {};
+    players.forEach(p => tempAttendance[p.id] = p.attending);
+    renderAttendanceList();
+    document.getElementById('attendanceOverlay').classList.add('show');
+}
+function closeAttendance() { document.getElementById('attendanceOverlay').classList.remove('show'); }
+
+function renderAttendanceList() {
+    document.getElementById('attendanceList').innerHTML = players.map(p => `
+        <div class="attend-chip ${tempAttendance[p.id]?'present':'absent-mark'}"
+             onclick="toggleTempAttend(${p.id})">
+            ${tempAttendance[p.id]?'✓':''} ${p.name}
+        </div>`).join('');
+}
+
+function toggleTempAttend(id) {
+    tempAttendance[id] = !tempAttendance[id];
+    renderAttendanceList();
+}
+
+function setAllAttendance(val) {
+    players.forEach(p => tempAttendance[p.id] = val);
+    renderAttendanceList();
+}
+
+function saveAttendance() {
+    const attendees = [];
+    players.forEach(p => {
+        const was = p.attending;
+        p.attending = tempAttendance[p.id];
+        if (p.attending) attendees.push(p.name);
+        if (!p.attending && p.onCourt) { setOnCourt(p.id, false); courts.forEach(c=>{for(let i=0;i<4;i++) if(c[i]===p.id) c[i]=null;}); }
+        if (!p.attending) p.resting = false;
+    });
+    if (attendees.length > 0) {
+        sessions.push({ ts: Date.now(), attendees, rounds: 0 });
+        if (sessions.length > 100) sessions = sessions.slice(-100);
+    }
+    closeAttendance();
+    render(); saveData();
+    toast(`✅ 出席確認：${attendees.length} 人`);
+}
+
+// ── Pairs ─────────────────────────────────────────────────
+function openPairs() {
+    renderPairsModal();
+    document.getElementById('pairsOverlay').classList.add('show');
+}
+function closePairs() { document.getElementById('pairsOverlay').classList.remove('show'); }
+
+function renderPairsModal() {
+    const list = document.getElementById('pairsList');
+    list.innerHTML = pairs.length
+        ? pairs.map((pr, i) => {
+            const names = pr.ids.map(id => players.find(p=>p.id===id)?.name||'?').join(' ＆ ');
+            return `<div class="pair-item">
+                <span class="pair-type ${pr.type==='together'?'pair-together':'pair-avoid'}">${pr.type==='together'?'固定搭檔':'盡量迴避'}</span>
+                <span class="pair-names">${names}</span>
+                <span class="chip-btn" onclick="removePair(${i})" style="font-size:16px">×</span>
+            </div>`;
+          }).join('')
+        : '<p class="empty-hint">尚未設定任何搭檔關係</p>';
+
+    const options = players.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    document.getElementById('pair1Select').innerHTML = options;
+    document.getElementById('pair2Select').innerHTML = options;
+}
+
+function addPair(type) {
+    const id1 = parseInt(document.getElementById('pair1Select').value);
+    const id2 = parseInt(document.getElementById('pair2Select').value);
+    if (id1===id2) { toast('請選擇不同的球員'); return; }
+    if (pairs.find(pr=>pr.ids.includes(id1)&&pr.ids.includes(id2))) { toast('此搭檔關係已存在'); return; }
+    pairs.push({type, ids:[id1, id2]});
+    renderPairsModal(); saveData();
+    toast(type==='together'?'✅ 已設定固定搭檔':'🚫 已設定迴避關係');
+}
+
+function removePair(i) { pairs.splice(i,1); renderPairsModal(); saveData(); }
+
+// ── Assign ────────────────────────────────────────────────
 function randomAssign() {
     resetCourts();
-    const avail = players.filter(p => !p.onCourt && !p.resting)
-        .map(p => ({
-            p,
-            score: p.playCount * settings.playCountWeight
-                 - (p.waitRounds || 0) * settings.waitWeight
-                 + Math.random() * 0.4
-        }))
-        .sort((a, b) => a.score - b.score)
-        .map(x => x.p);
+    let avail = players.filter(p=>!p.onCourt&&!p.resting&&p.attending)
+        .map(p=>({p, score: p.playCount*settings.playCountWeight - (p.waitRounds||0)*settings.waitWeight + Math.random()*0.4}))
+        .sort((a,b)=>a.score-b.score).map(x=>x.p);
 
-    const toAssign = avail.slice(0, courtCount * 4);
+    const toAssign = genderAwareSelect(avail, courtCount*4);
 
     if (settings.levelBalance) {
-        for (let ci = 0; ci < courtCount; ci++) {
+        for (let ci=0;ci<courtCount;ci++) {
             const grp = toAssign.slice(ci*4, ci*4+4);
-            if (grp.length === 4) {
-                grp.sort((a, b) => b.level - a.level);
-                // A隊: 最強+最弱, B隊: 中間兩位
-                toAssign[ci*4]   = grp[0];
-                toAssign[ci*4+1] = grp[3];
-                toAssign[ci*4+2] = grp[1];
-                toAssign[ci*4+3] = grp[2];
+            if (grp.length===4) {
+                grp.sort((a,b)=>b.level-a.level);
+                toAssign[ci*4]=grp[0]; toAssign[ci*4+1]=grp[3];
+                toAssign[ci*4+2]=grp[1]; toAssign[ci*4+3]=grp[2];
             }
         }
     }
 
-    let idx = 0;
-    for (let ci = 0; ci < courtCount; ci++) {
-        for (let si = 0; si < 4; si++) {
-            if (idx >= toAssign.length) break;
-            courts[ci][si] = toAssign[idx].id;
-            toAssign[idx].onCourt = true;
-            idx++;
+    applyPairConstraints(toAssign);
+
+    let idx=0;
+    for (let ci=0;ci<courtCount;ci++)
+        for (let si=0;si<4;si++) {
+            if (idx>=toAssign.length) break;
+            courts[ci][si]=toAssign[idx].id; toAssign[idx].onCourt=true; idx++;
         }
-    }
+
     render(); saveData();
     toast('✅ 隨機排場完成');
 }
 
+function genderAwareSelect(avail, total) {
+    const { minMale, minFemale } = settings;
+    if (minMale===0 && minFemale===0) return avail.slice(0, total);
+
+    const males = avail.filter(p=>p.gender==='m');
+    const females = avail.filter(p=>p.gender==='f');
+    const result = [];
+
+    for (let ci=0;ci<courtCount;ci++) {
+        const reserved = [];
+        for (let i=0;i<minMale&&males.length>0;i++) reserved.push(males.shift());
+        for (let i=0;i<minFemale&&females.length>0;i++) reserved.push(females.shift());
+        result.push(...reserved);
+    }
+
+    const usedIds = new Set(result.map(p=>p.id));
+    const rest = avail.filter(p=>!usedIds.has(p.id));
+    for (const p of rest) { if (result.length>=total) break; result.push(p); }
+    return result.slice(0, total);
+}
+
+function applyPairConstraints(arr) {
+    const courtOf = id => {
+        for (let ci=0;ci<courtCount;ci++) {
+            const start=ci*4;
+            if (arr.slice(start,start+4).some(p=>p&&p.id===id)) return ci;
+        }
+        return -1;
+    };
+    pairs.forEach(pr => {
+        const [id1,id2] = pr.ids;
+        const ci1=courtOf(id1), ci2=courtOf(id2);
+        if (ci1===-1||ci2===-1) return;
+        if (pr.type==='together' && ci1!==ci2) {
+            const idx2 = arr.findIndex(p=>p&&p.id===id2);
+            const slot1end = (ci1+1)*4;
+            const swap = arr.slice(ci1*4, slot1end).findIndex(p=>p&&p.id!==id1);
+            if (swap>=0 && idx2>=0) { const tmp=arr[ci1*4+swap]; arr[ci1*4+swap]=arr[idx2]; arr[idx2]=tmp; }
+        }
+        if (pr.type==='avoid' && ci1===ci2) {
+            const idx2 = arr.findIndex(p=>p&&p.id===id2);
+            const otherStart = (ci1===courtCount-1?0:ci1+1)*4;
+            if (otherStart!==ci1*4 && arr[otherStart]) { const tmp=arr[otherStart]; arr[otherStart]=arr[idx2]; arr[idx2]=tmp; }
+        }
+    });
+}
+
 function toggleManual() {
     manualMode = !manualMode;
-    toast(manualMode ? '✋ 點擊空格指定球員，點已排球員可移除' : '手動模式關閉');
+    toast(manualMode?'✋ 點擊空格指定球員，點已排球員可移除':'手動模式關閉');
     render(); saveData();
 }
 
 function slotClick(ci, si) {
     if (!manualMode) return;
     const pid = courts[ci][si];
-    if (pid !== null) {
-        setOnCourt(pid, false);
-        courts[ci][si] = null;
-        render(); saveData();
-    } else {
-        pendingSlot = { ci, si };
-        openModal();
-    }
+    if (pid!==null) { setOnCourt(pid,false); courts[ci][si]=null; render(); saveData(); }
+    else { pendingSlot={ci,si}; openModal(); }
 }
 
 function openModal() {
-    const {ci, si} = pendingSlot;
-    document.getElementById('modalTitle').textContent =
-        `場地 ${ci+1}・${si < 2 ? 'A 隊' : 'B 隊'}・位置 ${(si%2)+1}`;
-    const avail = players.filter(p => !p.onCourt && !p.resting);
-    document.getElementById('modalChips').innerHTML = avail.length
-        ? avail.map(p => `<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
+    const {ci,si}=pendingSlot;
+    document.getElementById('modalTitle').textContent=`場地 ${ci+1}・${si<2?'A 隊':'B 隊'}・位置 ${(si%2)+1}`;
+    const avail=players.filter(p=>!p.onCourt&&!p.resting&&p.attending);
+    document.getElementById('modalChips').innerHTML=avail.length
+        ?avail.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
             ${p.name}
-            <span style="font-size:11px;font-weight:600;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
-            <span style="font-size:11px;color:#999">${p.playCount}場</span>
+            <span style="font-size:0.75em;font-weight:600;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
+            <span style="font-size:0.75em;color:#999">${p.playCount}場</span>
           </div>`).join('')
-        : '<span class="empty-hint">沒有可用的球員</span>';
+        :'<span class="empty-hint">沒有可用的球員</span>';
     document.getElementById('overlay').classList.add('show');
 }
-
-function pickPlayer(id) {
-    courts[pendingSlot.ci][pendingSlot.si] = id;
-    setOnCourt(id, true);
-    closeModal();
-    render(); saveData();
-}
-
+function pickPlayer(id) { courts[pendingSlot.ci][pendingSlot.si]=id; setOnCourt(id,true); closeModal(); render(); saveData(); }
 function closeModal() { document.getElementById('overlay').classList.remove('show'); }
-function overlayClick(e) { if (e.target.id === 'overlay') closeModal(); }
+function overlayClick(e) { if(e.target.id==='overlay') closeModal(); }
 
-function openSettings() {
-    document.getElementById('playCountWeight').value = settings.playCountWeight;
-    document.getElementById('playCountVal').textContent = settings.playCountWeight.toFixed(1);
-    document.getElementById('waitWeight').value = settings.waitWeight;
-    document.getElementById('waitVal').textContent = settings.waitWeight.toFixed(1);
-    document.getElementById('levelBalance').checked = settings.levelBalance;
-    document.getElementById('settingsOverlay').classList.add('show');
-}
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
-function settingsOverlayClick(e) { if (e.target.id === 'settingsOverlay') closeSettings(); }
-function saveSettings() {
-    settings.playCountWeight = parseFloat(document.getElementById('playCountWeight').value);
-    settings.waitWeight = parseFloat(document.getElementById('waitWeight').value);
-    settings.levelBalance = document.getElementById('levelBalance').checked;
-    saveData();
-    closeSettings();
-    toast('✅ 設定已儲存');
-}
-
+// ── Batch ─────────────────────────────────────────────────
 function openBatch() { document.getElementById('batchOverlay').classList.add('show'); }
 function closeBatch() { document.getElementById('batchOverlay').classList.remove('show'); }
-function batchOverlayClick(e) { if (e.target.id === 'batchOverlay') closeBatch(); }
 
 function saveBatch() {
-    const lines = document.getElementById('batchText').value.trim().split('\n').map(l=>l.trim()).filter(Boolean);
-    let added = 0, skipped = 0;
-    lines.forEach(line => {
-        const parts = line.split(',').map(s=>s.trim());
-        const name = parts[0];
-        if (!name || players.find(p=>p.name===name)) { skipped++; return; }
-        const gender = GENDER_MAP[parts[1]] || 'm';
-        const level = LEVEL_MAP[parts[2]] ?? 0;
-        players.push({ id: nextId++, name, gender, level, playCount: 0, onCourt: false, resting: false });
+    const lines=document.getElementById('batchText').value.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+    let added=0,skipped=0;
+    lines.forEach(line=>{
+        const parts=line.split(',').map(s=>s.trim());
+        const name=parts[0];
+        if (!name||players.find(p=>p.name===name)){skipped++;return;}
+        players.push({id:nextId++,name,gender:GENDER_MAP[parts[1]]||'m',level:LEVEL_MAP[parts[2]]??0,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:''});
         added++;
     });
-    document.getElementById('batchText').value = '';
-    closeBatch();
-    render(); saveData();
-    toast(`✅ 新增 ${added} 位${skipped ? `，略過 ${skipped} 筆` : ''}`);
+    document.getElementById('batchText').value='';
+    closeBatch(); render(); saveData();
+    toast(`✅ 新增 ${added} 位${skipped?`，略過 ${skipped} 筆`:''}`)
 }
 
+// ── Round ─────────────────────────────────────────────────
 function saveRecord() {
-    const courtsData = courts.map((c, i) => ({
-        court: i + 1,
-        players: c.map(pid => {
-            if (!pid) return null;
-            const p = players.find(x => x.id === pid);
-            return p ? { name: p.name, gender: p.gender } : null;
-        }).filter(Boolean)
-    })).filter(c => c.players.length > 0);
+    const courtsData=courts.map((c,i)=>({court:i+1,players:c.map(pid=>{if(!pid)return null;const p=players.find(x=>x.id===pid);return p?{name:p.name,gender:p.gender}:null;}).filter(Boolean)})).filter(c=>c.players.length>0);
     if (!courtsData.length) return;
-    matchRecords.push({ ts: Date.now(), courts: courtsData });
-    if (matchRecords.length > 200) matchRecords = matchRecords.slice(-200);
-}
-
-function openHistory() {
-    const el = document.getElementById('historyContent');
-    if (!matchRecords.length) {
-        el.innerHTML = '<p class="empty-hint">尚無對戰紀錄</p>';
-    } else {
-        const groups = {};
-        [...matchRecords].reverse().forEach(r => {
-            const d = new Date(r.ts);
-            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(r);
-        });
-        el.innerHTML = Object.entries(groups).map(([date, records]) => `
-            <div class="history-date">${date}</div>
-            ${records.map(r => {
-                const t = new Date(r.ts);
-                const time = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
-                return `<div class="history-record">
-                    <div class="history-time">${time}</div>
-                    ${r.courts.map(c => `
-                        <div class="history-court">
-                            <div class="history-court-label">場地 ${c.court}</div>
-                            <div class="history-players">
-                                ${c.players.map(p=>`<span class="h-chip ${p.gender==='m'?'male':'female'}">${p.name}</span>`).join('')}
-                            </div>
-                        </div>`).join('')}
-                </div>`;
-            }).join('')}
-        `).join('');
-    }
-    document.getElementById('historyOverlay').classList.add('show');
-}
-
-function closeHistory() { document.getElementById('historyOverlay').classList.remove('show'); }
-function historyOverlayClick(e) { if (e.target.id === 'historyOverlay') closeHistory(); }
-
-function clearHistory() {
-    if (!confirm('確定清除所有對戰紀錄？')) return;
-    matchRecords = [];
-    saveData();
-    closeHistory();
-    toast('已清除對戰紀錄');
+    matchRecords.push({ts:Date.now(),courts:courtsData});
+    if (matchRecords.length>200) matchRecords=matchRecords.slice(-200);
+    if (sessions.length>0) sessions[sessions.length-1].rounds++;
 }
 
 function nextRound() {
-    let count = 0;
-    const onCourtIds = new Set();
-    courts.forEach(c => c.forEach(pid => {
-        if (pid) { players.find(p=>p.id===pid).playCount++; onCourtIds.add(pid); count++; }
-    }));
+    let count=0;
+    const onCourtIds=new Set();
+    courts.forEach(c=>c.forEach(pid=>{if(pid){players.find(p=>p.id===pid).playCount++;onCourtIds.add(pid);count++;}}));
     if (!count) { toast('場地上沒有球員'); return; }
-    players.forEach(p => {
-        if (onCourtIds.has(p.id)) p.waitRounds = 0;
-        else if (!p.resting) p.waitRounds = (p.waitRounds || 0) + 1;
+    players.forEach(p=>{
+        if (onCourtIds.has(p.id)) p.waitRounds=0;
+        else if (!p.resting&&p.attending) p.waitRounds=(p.waitRounds||0)+1;
     });
-    saveRecord();
-    resetCourts();
-    randomAssign();
-    saveData();
+    saveRecord(); resetCourts(); randomAssign(); saveData();
     toast('⏭ 下一輪開始！');
 }
 
-function resetCourts() {
-    players.forEach(p => p.onCourt = false);
-    courts = Array.from({length: courtCount}, () => [null,null,null,null]);
+function resetCourts() { players.forEach(p=>p.onCourt=false); courts=Array.from({length:courtCount},()=>[null,null,null,null]); }
+
+function clearAll() {
+    if (!confirm('確定清空所有場地嗎？')) return;
+    resetCourts(); render(); saveData();
 }
 
-function clearAll() { resetCourts(); render(); saveData(); }
+// ── History ───────────────────────────────────────────────
+let currentTab = 'match';
 
+function openHistory() { renderHistory(); document.getElementById('historyOverlay').classList.add('show'); }
+function closeHistory() { document.getElementById('historyOverlay').classList.remove('show'); }
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tabMatch').classList.toggle('active', tab==='match');
+    document.getElementById('tabSession').classList.toggle('active', tab==='session');
+    renderHistory();
+}
+
+function renderHistory() {
+    const el = document.getElementById('historyContent');
+    if (currentTab==='match') {
+        if (!matchRecords.length) { el.innerHTML='<p class="empty-hint">尚無對戰紀錄</p>'; return; }
+        const groups={};
+        [...matchRecords].reverse().forEach(r=>{
+            const d=new Date(r.ts);
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (!groups[key]) groups[key]=[];
+            groups[key].push(r);
+        });
+        el.innerHTML=Object.entries(groups).map(([date,records])=>`
+            <div class="history-date">${date}</div>
+            ${records.map(r=>{
+                const t=new Date(r.ts);
+                const time=`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+                return `<div class="history-record">
+                    <div class="history-time">${time}</div>
+                    ${r.courts.map(c=>`<div class="history-court">
+                        <div class="history-court-label">場地 ${c.court}</div>
+                        <div class="history-players">${c.players.map(p=>`<span class="h-chip ${p.gender==='m'?'male':'female'}">${p.name}</span>`).join('')}</div>
+                    </div>`).join('')}
+                </div>`;
+            }).join('')}`).join('');
+    } else {
+        if (!sessions.length) { el.innerHTML='<p class="empty-hint">尚無活動記錄</p>'; return; }
+        el.innerHTML=[...sessions].reverse().map(s=>{
+            const d=new Date(s.ts);
+            const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const time=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            return `<div class="session-card">
+                <div class="session-date">${dateStr} ${time}</div>
+                <div class="session-info">出席 ${s.attendees.length} 人・共 ${s.rounds||0} 輪</div>
+                <div class="session-info" style="margin-top:4px">${s.attendees.join('、')}</div>
+            </div>`;
+        }).join('');
+    }
+}
+
+function clearHistory() {
+    if (!confirm('確定清除所有紀錄？')) return;
+    matchRecords=[]; sessions=[];
+    saveData(); renderHistory();
+    toast('已清除所有紀錄');
+}
+
+function exportData() {
+    let txt = '=== 球員名單 ===\n';
+    txt += '姓名,性別,等級,場數\n';
+    players.forEach(p=>{ txt+=`${p.name},${p.gender==='m'?'男':'女'},${LEVELS[p.level]},${p.playCount}\n`; });
+    txt += '\n=== 對戰紀錄 ===\n';
+    matchRecords.forEach(r=>{
+        const d=new Date(r.ts);
+        const t=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        r.courts.forEach(c=>{ txt+=`${t},場地${c.court},${c.players.map(p=>p.name).join(',')}\n`; });
+    });
+    try {
+        navigator.clipboard.writeText(txt);
+        toast('✅ 已複製到剪貼板');
+    } catch(e) {
+        const a=document.createElement('a');
+        a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(txt);
+        a.download='badminton_export.txt'; a.click();
+    }
+}
+
+// ── Settings ──────────────────────────────────────────────
+function openSettings() {
+    document.getElementById('playCountWeight').value=settings.playCountWeight;
+    document.getElementById('playCountVal').textContent=settings.playCountWeight.toFixed(1);
+    document.getElementById('waitWeight').value=settings.waitWeight;
+    document.getElementById('waitVal').textContent=settings.waitWeight.toFixed(1);
+    document.getElementById('minMale').value=settings.minMale||0;
+    document.getElementById('minMaleVal').textContent=settings.minMale||0;
+    document.getElementById('minFemale').value=settings.minFemale||0;
+    document.getElementById('minFemaleVal').textContent=settings.minFemale||0;
+    document.getElementById('levelBalance').checked=settings.levelBalance;
+    setFont(settings.fontSize||'medium');
+    document.getElementById('settingsOverlay').classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+function saveSettings() {
+    settings.playCountWeight=parseFloat(document.getElementById('playCountWeight').value);
+    settings.waitWeight=parseFloat(document.getElementById('waitWeight').value);
+    settings.minMale=parseInt(document.getElementById('minMale').value);
+    settings.minFemale=parseInt(document.getElementById('minFemale').value);
+    settings.levelBalance=document.getElementById('levelBalance').checked;
+    saveData(); closeSettings();
+    toast('✅ 設定已儲存');
+}
+
+// ── Render ────────────────────────────────────────────────
 function render() {
-    document.getElementById('courtNum').textContent = courtCount;
-    document.getElementById('manualBtn').className = 'btn btn-outline' + (manualMode ? ' active' : '');
-    renderCourts();
-    renderWaiting();
-    renderResting();
-    renderPlayers();
+    document.getElementById('courtNum').textContent=courtCount;
+    document.getElementById('manualBtn').className='btn btn-outline'+(manualMode?' active':'');
+    renderCourts(); renderWaiting(); renderResting(); renderPlayers();
 }
 
 function renderCourts() {
-    document.getElementById('courtsGrid').innerHTML = courts.map((c,ci) => `
+    document.getElementById('courtsGrid').innerHTML=courts.map((c,ci)=>`
         <div class="court-card" style="border-top-color:${COLORS[ci%COLORS.length]}">
             <div class="court-title">場地 ${ci+1}</div>
             <div class="team">${slot(ci,0,c[0])}${slot(ci,1,c[1])}</div>
@@ -714,68 +961,64 @@ function renderCourts() {
         </div>`).join('');
 }
 
-function slot(ci, si, pid) {
-    const p = pid ? players.find(x=>x.id===pid) : null;
-    const gc = p ? (p.gender==='m' ? 'male' : 'female') : '';
+function slot(ci,si,pid) {
+    const p=pid?players.find(x=>x.id===pid):null;
+    const gc=p?(p.gender==='m'?'male':'female'):'';
     if (manualMode) {
-        if (p) return `<div class="slot filled manual-filled ${gc}" onclick="slotClick(${ci},${si})">
-            <span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`;
+        if (p) return `<div class="slot filled manual-filled ${gc}" onclick="slotClick(${ci},${si})"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`;
         return `<div class="slot manual-empty" onclick="slotClick(${ci},${si})">＋ 選擇</div>`;
     }
-    return p
-        ? `<div class="slot filled ${gc}"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`
-        : `<div class="slot">－</div>`;
+    return p?`<div class="slot filled ${gc}"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`:`<div class="slot">－</div>`;
 }
 
 function renderWaiting() {
-    const w = players.filter(p=>!p.onCourt && !p.resting).sort((a,b)=>a.playCount-b.playCount);
-    document.getElementById('waitBadge').textContent = w.length;
-    document.getElementById('waitList').innerHTML = w.length
-        ? w.map(p=>`<div class="chip ${p.gender==='m'?'male':'female'}">
+    const w=players.filter(p=>!p.onCourt&&!p.resting&&p.attending).sort((a,b)=>a.playCount-b.playCount);
+    document.getElementById('waitBadge').textContent=w.length;
+    document.getElementById('waitList').innerHTML=w.length
+        ?w.map(p=>`<div class="chip ${p.gender==='m'?'male':'female'}">
             <span>${p.name}</span>
             <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
             <span class="chip-count">${p.playCount}</span>
             <span class="chip-btn" onclick="toggleRest(${p.id})" title="休息">💤</span>
           </div>`).join('')
-        : '<span class="empty-hint">目前沒有等待的球員</span>';
+        :'<span class="empty-hint">目前沒有等待的球員</span>';
 }
 
 function renderResting() {
-    const r = players.filter(p=>p.resting);
-    document.getElementById('restBadge').textContent = r.length;
-    document.getElementById('restSection').style.display = r.length ? 'block' : 'none';
-    document.getElementById('restList').innerHTML = r.map(p=>`
-        <div class="chip resting">
-            <span>${p.name}</span>
-            <span class="chip-btn" onclick="toggleRest(${p.id})" title="回到等待">↩️</span>
-        </div>`).join('');
+    const r=players.filter(p=>p.resting&&p.attending);
+    document.getElementById('restBadge').textContent=r.length;
+    document.getElementById('restSection').style.display=r.length?'block':'none';
+    document.getElementById('restList').innerHTML=r.map(p=>`
+        <div class="chip resting"><span>${p.name}</span>
+        <span class="chip-btn" onclick="toggleRest(${p.id})" title="回到等待">↩️</span></div>`).join('');
 }
 
 function renderPlayers() {
-    document.getElementById('playerBadge').textContent = players.length;
-    document.getElementById('playerList').innerHTML = players.length
-        ? players.map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'}">
+    document.getElementById('playerBadge').textContent=players.length;
+    document.getElementById('playerList').innerHTML=players.length
+        ?players.map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'} ${p.attending?'':'absent'}">
             <span>${p.name}</span>
             <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
+            ${p.note?`<span class="chip-note" title="${p.note}">📝</span>`:''}
             <span class="chip-count">${p.playCount}</span>
+            <span class="chip-btn" onclick="openNote(${p.id})" title="備註">📝</span>
             <span class="chip-remove" onclick="removePlayer(${p.id})">×</span>
           </div>`).join('')
-        : '<span class="empty-hint">尚未新增球員</span>';
+        :'<span class="empty-hint">尚未新增球員</span>';
 }
 
 function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._t);
-    t._t = setTimeout(()=>t.classList.remove('show'), 2200);
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js'));
 }
 
 loadData();
+applyTheme();
 render();
 </script>
 </body>
