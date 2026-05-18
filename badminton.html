@@ -253,6 +253,43 @@
             .action-bar .btn { font-size: 0.75em; }
             .courts-grid { grid-template-columns: 1fr; }
         }
+
+        /* Tutorial */
+        #tut-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.86); z-index: 900;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        #tut-overlay.show { display: flex; }
+        .tut-box {
+            background: #1e2533; border-radius: 18px; padding: 28px 24px 22px;
+            width: 100%; max-width: 400px; color: #e8eaf0;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+        .tut-step-label {
+            font-size: 0.72em; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #7986cb; margin-bottom: 10px;
+        }
+        .tut-icon { font-size: 2.4em; margin-bottom: 10px; line-height: 1; }
+        .tut-title { font-size: 1.15em; font-weight: 700; margin-bottom: 10px; color: #fff; }
+        .tut-body { font-size: 0.9em; line-height: 1.7; color: #b0bec5; margin-bottom: 20px; }
+        .tut-body b { color: #e8eaf0; }
+        .tut-body .tut-tag {
+            display: inline-block; background: rgba(255,255,255,0.1); border-radius: 6px;
+            padding: 1px 8px; font-size: 0.88em; font-weight: 700; color: #fff; margin: 0 2px;
+        }
+        .tut-dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 18px; }
+        .tut-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.2s; }
+        .tut-dot.active { background: #7986cb; }
+        .tut-btns { display: flex; gap: 10px; }
+        .tut-btn {
+            flex: 1; padding: 11px; border-radius: 10px; border: none;
+            font-size: 0.92em; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+        }
+        .tut-btn:active { opacity: 0.8; }
+        .tut-btn-next { background: #3f51b5; color: white; }
+        .tut-btn-skip { background: rgba(255,255,255,0.08); color: #90a4ae; }
+        .tut-btn-prev { background: rgba(255,255,255,0.08); color: #90a4ae; }
     </style>
 </head>
 <body>
@@ -474,6 +511,24 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 新手教學 -->
+<div id="tut-overlay">
+    <div class="tut-box">
+        <div class="tut-step-label" id="tut-step-label">步驟 1 / 6</div>
+        <div class="tut-icon" id="tut-icon">🏸</div>
+        <div class="tut-title" id="tut-title"></div>
+        <div class="tut-body" id="tut-body"></div>
+        <div class="tut-dots" id="tut-dots"></div>
+        <div class="tut-btns">
+            <button class="tut-btn tut-btn-prev" id="tut-prev-btn" onclick="tutPrev()">上一步</button>
+            <button class="tut-btn tut-btn-next" id="tut-next-btn" onclick="tutNext()">下一步</button>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+            <button class="tut-btn tut-btn-skip" style="flex:none;width:auto;padding:8px 20px;font-size:0.82em" onclick="dismissTutorial()">略過教學</button>
+        </div>
+    </div>
+</div>
 
 <script>
 const COLORS = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#F44336','#00BCD4','#795548','#607D8B'];
@@ -1017,9 +1072,82 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js'));
 }
 
+// ── Tutorial ──────────────────────────────────────────────
+const TUT_STEPS = [
+    {
+        icon: '🏸',
+        title: '歡迎使用羽球排場系統',
+        body: '這個系統幫您<b>自動分配球員上場順序</b>，讓每位球員都能公平輪流。<br><br>接下來將帶您快速了解主要功能。'
+    },
+    {
+        icon: '👤',
+        title: '新增球員',
+        body: '在頁面底部的<b>球員名單</b>區域：<br><br>① 輸入球員姓名<br>② 選擇性別（<span class="tut-tag" style="background:#1a4a7a">男</span> / <span class="tut-tag" style="background:#6a1030">女</span>）<br>③ 選擇程度等級<br>④ 按 <span class="tut-tag">新增</span> 加入，或按 <span class="tut-tag">批量</span> 一次匯入多人'
+    },
+    {
+        icon: '🏟️',
+        title: '場地與出席管理',
+        body: '頂部工具列：<br><br>• <span class="tut-tag">−  2  ＋</span> 調整今日開放的場地數量<br>• <span class="tut-tag">👥</span> 出席管理——標記今天哪些球員到場，只有出席球員才參與排場'
+    },
+    {
+        icon: '🎲',
+        title: '隨機排場',
+        body: '按底部 <span class="tut-tag">🎲 隨機排場</span>，系統會依據：<br><br>• 球員已上場次數（場次少的優先）<br>• 等待輪數（等越久越優先）<br>• 等級均衡（同場避免程度差距過大）<br><br>自動將球員分配到各場地'
+    },
+    {
+        icon: '⏭',
+        title: '結束本輪，開始下一輪',
+        body: '打完一輪後，按 <span class="tut-tag">⏭ 下一輪</span>：<br><br>① 自動記錄本輪對戰名單<br>② 更新每位球員的場次計數<br>③ 清空場地並重新排場<br><br>按 <span class="tut-tag">🔗</span> 可設定<b>固定搭檔</b>或<b>迴避配對</b>的關係'
+    },
+    {
+        icon: '✋',
+        title: '手動模式 & 其他功能',
+        body: '• <span class="tut-tag">✋ 手動</span>：開啟後可點擊場地格子自由指定球員<br>• <span class="tut-tag">💤</span>：將球員標記為休息中，不參與本輪排場<br>• <span class="tut-tag">📋</span>：查看歷史對戰紀錄與活動記錄<br>• <span class="tut-tag">⚙️</span>：調整排場參數（權重、性別比例等）'
+    }
+];
+let tutStep = 0;
+
+function checkTutorial() {
+    if (!localStorage.getItem('tut-done-badminton')) {
+        tutStep = 0;
+        renderTutStep();
+        document.getElementById('tut-overlay').classList.add('show');
+    }
+}
+
+function renderTutStep() {
+    const s = TUT_STEPS[tutStep];
+    const total = TUT_STEPS.length;
+    document.getElementById('tut-step-label').textContent = `步驟 ${tutStep + 1} / ${total}`;
+    document.getElementById('tut-icon').textContent = s.icon;
+    document.getElementById('tut-title').textContent = s.title;
+    document.getElementById('tut-body').innerHTML = s.body;
+    document.getElementById('tut-dots').innerHTML = TUT_STEPS.map((_,i) =>
+        `<div class="tut-dot${i===tutStep?' active':''}"></div>`).join('');
+    document.getElementById('tut-prev-btn').style.visibility = tutStep === 0 ? 'hidden' : 'visible';
+    const nextBtn = document.getElementById('tut-next-btn');
+    nextBtn.textContent = tutStep === total - 1 ? '開始使用 ✓' : '下一步';
+    nextBtn.style.background = tutStep === total - 1 ? '#2e7d32' : '#3f51b5';
+}
+
+function tutNext() {
+    if (tutStep < TUT_STEPS.length - 1) { tutStep++; renderTutStep(); }
+    else dismissTutorial();
+}
+
+function tutPrev() {
+    if (tutStep > 0) { tutStep--; renderTutStep(); }
+}
+
+function dismissTutorial() {
+    document.getElementById('tut-overlay').classList.remove('show');
+    localStorage.setItem('tut-done-badminton', '1');
+}
+
 loadData();
 applyTheme();
 render();
+checkTutorial();
 </script>
 </body>
 </html>
