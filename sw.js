@@ -1,4 +1,4 @@
-const CACHE = 'badminton-v1';
+const CACHE = 'badminton-v2';
 const FILES = ['./badminton.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
