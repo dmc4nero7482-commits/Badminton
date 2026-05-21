@@ -1206,8 +1206,13 @@ async function checkAppUpdate() {
     if (!res.ok) return;
     const data = await res.json();
     if (data.version === APP_VERSION) return;
-    const msg = `發現新版本 ${data.version}${data.note ? '\n' + data.note : ''}\n\n是否前往下載更新？`;
-    if (confirm(msg)) window.open(data.download, '_blank');
+    const msg = `發現新版本 ${data.version}${data.note ? '\n' + data.note : ''}\n\n是否立即下載並安裝更新？`;
+    if (!confirm(msg)) return;
+    if (window.AndroidUpdate) {
+      window.AndroidUpdate.downloadAndInstall(data.download, 'badminton-update.apk');
+    } else {
+      window.open(data.download, '_blank');
+    }
   } catch(e) {}
 }
 
