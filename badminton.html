@@ -72,6 +72,8 @@
         .team { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .vs-divider { display: flex; align-items: center; gap: 6px; margin: 8px 0; color: var(--text-light); font-size: 0.78em; font-weight: 700; }
         .vs-divider::before, .vs-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .btn-score { width: 100%; margin-top: 10px; padding: 7px; border: none; border-radius: 8px; background: #1976d2; color: white; font-size: 0.85em; font-weight: 600; cursor: pointer; }
+        .btn-score:hover { background: #1565c0; }
         .slot {
             min-height: 44px; border-radius: 8px; border: 2px dashed #90caf9;
             background: var(--male-bg); display: flex; align-items: center; justify-content: center;
@@ -1131,13 +1133,23 @@ function render() {
 }
 
 function renderCourts() {
-    document.getElementById('courtsGrid').innerHTML=courts.map((c,ci)=>`
+    document.getElementById('courtsGrid').innerHTML=courts.map((c,ci)=>{
+        const getNames = pids => pids.map(pid => {
+            const p = pid ? players.find(x=>x.id===pid) : null;
+            return p ? p.name : null;
+        }).filter(Boolean).join('/');
+        const teamA = getNames([c[0],c[1]]);
+        const teamB = getNames([c[2],c[3]]);
+        const hasPlayers = teamA || teamB;
+        return `
         <div class="court-card" style="border-top-color:${COLORS[ci%COLORS.length]}">
             <div class="court-title">場地 ${ci+1}</div>
             <div class="team">${slot(ci,0,c[0])}${slot(ci,1,c[1])}</div>
             <div class="vs-divider">VS</div>
             <div class="team">${slot(ci,2,c[2])}${slot(ci,3,c[3])}</div>
-        </div>`).join('');
+            ${hasPlayers ? `<button class="btn-score" onclick="startScoring(${ci})">🏸 開始計分</button>` : ''}
+        </div>`;
+    }).join('');
 }
 
 function slot(ci,si,pid) {
@@ -1254,6 +1266,28 @@ function startDownload(url) {
   }
 }
 
+function startScoring(ci) {
+    const c = courts[ci];
+    const getNames = pids => pids.map(pid => {
+        const p = pid ? players.find(x=>x.id===pid) : null;
+        return p ? p.name : null;
+    }).filter(Boolean).join('/');
+    const teamA = getNames([c[0],c[1]]) || '隊伍A';
+    const teamB = getNames([c[2],c[3]]) || '隊伍B';
+    if (window.AndroidScoreboard) {
+        window.AndroidScoreboard.openScoreboard(teamA, teamB);
+    } else {
+        openScoreboardWeb(teamA, teamB);
+    }
+}
+function openScoreboardWeb(teamA, teamB) {
+    window.open('https://dmc4nero7482-commits.github.io/Scoreboard/scoreboard.html?teamA=' +
+        encodeURIComponent(teamA) + '&teamB=' + encodeURIComponent(teamB), '_blank');
+}
+function onDebugMsg(msg) {
+    const text = document.getElementById('update-status-text');
+    if (text) text.textContent = msg;
+}
 function onDownloadProgress(percent) {
   const fill = document.getElementById('update-progress-fill');
   const text = document.getElementById('update-status-text');
