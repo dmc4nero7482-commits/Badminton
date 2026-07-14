@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
-  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.0.1/badminton-debug.apk",
-  "note": "新增開始計分功能，與計分板整合"
+  "version": "1.1.0",
+  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.1.0/badminton-debug.apk",
+  "note": "新增隊伍分組功能，同隊排同邊、跨隊對戰"
 }
