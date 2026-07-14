@@ -1,0 +1,8 @@
+{
+  "appId": "com.twsa.badminton",
+  "appName": "羽球排場",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

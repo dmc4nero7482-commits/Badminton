@@ -204,6 +204,11 @@
         [data-theme="dark"] .pair-avoid { background: #3b0a0a; color: #ef9a9a; }
         .pair-names { flex: 1; font-size: 0.9em; font-weight: 500; }
 
+        /* Teams */
+        .team-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .team-btn { padding: 7px 14px; border-radius: 8px; border: 2px solid var(--border); background: var(--card); font-size: 0.9em; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+        .chip-team { font-size: 0.72em; padding: 1px 7px; border-radius: 8px; font-weight: 700; color: white; }
+
         /* Settings */
         .settings-group { margin-bottom: 18px; }
         .settings-label { display: block; font-size: 0.95em; font-weight: 600; margin-bottom: 6px; }
@@ -351,6 +356,7 @@
         <button class="btn-icon" onclick="openAttendance()" title="出席">👥</button>
         <button class="btn-icon" onclick="openHistory()" title="紀錄">📋</button>
         <button class="btn-icon" onclick="openPairs()" title="搭檔設定">🔗</button>
+        <button class="btn-icon" onclick="openTeams()" title="隊伍分組">🏷️</button>
         <button class="btn-icon" onclick="openSettings()" title="設定">⚙️</button>
         <button class="btn-icon" id="darkBtn" onclick="toggleDark()" title="深色模式">🌙</button>
         <button class="btn-icon" id="installBtn" onclick="openInstallGuide()" title="安裝到手機" style="display:none">📲</button>
@@ -448,8 +454,8 @@
 <div class="overlay" id="batchOverlay" onclick="if(event.target.id==='batchOverlay')closeBatch()">
     <div class="modal">
         <h3>批量新增球員</h3>
-        <p class="batch-hint">格式：姓名,性別,等級（每行一筆）<br>性別：男 / 女　　等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業</p>
-        <textarea class="batch-textarea" id="batchText" placeholder="小明,男,初中&#10;小華,女,新手&#10;小李,男,中階"></textarea>
+        <p class="batch-hint">格式：姓名,性別,等級,隊伍（每行一筆，隊伍選填）<br>性別：男 / 女　　等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業　　隊伍：A ~ F</p>
+        <textarea class="batch-textarea" id="batchText" placeholder="小明,男,初中,A&#10;小華,女,新手,A&#10;小李,男,中階,B"></textarea>
         <div class="modal-btns">
             <button class="btn btn-outline" onclick="closeBatch()">取消</button>
             <button class="btn btn-primary" onclick="saveBatch()">新增</button>
@@ -486,6 +492,20 @@
             </div>
         </div>
         <div class="modal-btns"><button class="btn btn-outline" onclick="closePairs()">關閉</button></div>
+    </div>
+</div>
+
+<!-- 隊伍分組 -->
+<div class="overlay" id="teamsOverlay" onclick="if(event.target.id==='teamsOverlay')closeTeams()">
+    <div class="modal" style="max-width:440px">
+        <h3>🏷️ 隊伍分組</h3>
+        <p style="font-size:0.82em;color:var(--text-light);margin-bottom:12px">先選擇隊伍，再點選球員將他加入該隊（再點一次移出）。排場時同隊球員會被排在同一邊。</p>
+        <div class="team-picker" id="teamPicker"></div>
+        <div class="chips" id="teamsPlayerList" style="margin-bottom:14px"></div>
+        <div class="modal-btns">
+            <button class="btn btn-outline btn-sm" onclick="clearAllTeams()">全部清除</button>
+            <button class="btn btn-primary" onclick="closeTeams()">完成</button>
+        </div>
     </div>
 </div>
 
@@ -661,6 +681,8 @@ const COLORS = ['#2196F3','#4CAF50','#FF9800','#9C27B0','#F44336','#00BCD4','#79
 const LEVELS = ['新手','初中','中階','中進','高階','職業'];
 const LEVEL_COLORS = ['#4CAF50','#e91e8c','#FF9800','#29B6F6','#757575','#212121'];
 const GENDER_MAP = {'男':'m','男性':'m','m':'m','1':'m','女':'f','女性':'f','f':'f','0':'f'};
+const TEAM_NAMES = ['A','B','C','D','E','F'];
+const TEAM_COLORS = {A:'#1976d2',B:'#388e3c',C:'#f57c00',D:'#8e24aa',E:'#00897b',F:'#c62828'};
 const LEVEL_MAP  = {'新手':0,'初中':1,'中階':2,'中進':3,'高階':4,'職業':5,'0':0,'1':1,'2':2,'3':3,'4':4,'5':5};
 
 let players=[], courts=[], matchRecords=[], sessions=[], pairs=[];
@@ -679,7 +701,7 @@ function loadData() {
     try {
         const d = JSON.parse(localStorage.getItem('badminton'));
         if (d) {
-            players = (d.players||[]).map(p=>({gender:'m',level:0,resting:false,waitRounds:0,attending:true,note:'',...p}));
+            players = (d.players||[]).map(p=>({gender:'m',level:0,resting:false,waitRounds:0,attending:true,note:'',team:'',...p}));
             courts = d.courts||[];
             courtCount = d.courtCount||2;
             nextId = d.nextId||1;
@@ -741,7 +763,7 @@ function addPlayer() {
     if (!name) { toast('請輸入球員姓名'); return; }
     if (players.find(p=>p.name===name)) { toast('球員名稱重複'); return; }
     const level = parseInt(document.getElementById('levelSelect').value);
-    players.push({id:nextId++, name, gender:selectedGender, level, playCount:0, onCourt:false, resting:false, waitRounds:0, attending:true, note:''});
+    players.push({id:nextId++, name, gender:selectedGender, level, playCount:0, onCourt:false, resting:false, waitRounds:0, attending:true, note:'', team:''});
     inp.value = '';
     render(); saveData();
 }
@@ -863,6 +885,51 @@ function addPair(type) {
 
 function removePair(i) { pairs.splice(i,1); renderPairsModal(); saveData(); }
 
+// ── Teams ─────────────────────────────────────────────────
+let selTeam = 'A';
+
+function openTeams() {
+    renderTeamsModal();
+    document.getElementById('teamsOverlay').classList.add('show');
+}
+function closeTeams() {
+    document.getElementById('teamsOverlay').classList.remove('show');
+    render(); saveData();
+}
+
+function renderTeamsModal() {
+    document.getElementById('teamPicker').innerHTML = TEAM_NAMES.map(t => {
+        const n = players.filter(p=>p.team===t).length;
+        const active = selTeam===t;
+        return `<button class="team-btn" style="${active
+            ? `background:${TEAM_COLORS[t]};border-color:${TEAM_COLORS[t]};color:white`
+            : `color:${TEAM_COLORS[t]};border-color:${TEAM_COLORS[t]}66`}"
+            onclick="pickTeam('${t}')">${t} 隊${n?` (${n})`:''}</button>`;
+    }).join('');
+    document.getElementById('teamsPlayerList').innerHTML = players.length
+        ? players.map(p => `
+            <div class="chip ${p.gender==='m'?'male':'female'}" style="cursor:pointer${p.team?`;box-shadow:0 0 0 2px ${TEAM_COLORS[p.team]}`:''}" onclick="toggleTeamAssign(${p.id})">
+                <span>${p.name}</span>
+                ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
+            </div>`).join('')
+        : '<p class="empty-hint">尚未新增球員</p>';
+}
+
+function pickTeam(t) { selTeam = t; renderTeamsModal(); }
+
+function toggleTeamAssign(id) {
+    const p = players.find(p=>p.id===id);
+    if (!p) return;
+    p.team = (p.team === selTeam) ? '' : selTeam;
+    renderTeamsModal(); saveData();
+}
+
+function clearAllTeams() {
+    if (!confirm('確定清除所有隊伍分組？')) return;
+    players.forEach(p => p.team = '');
+    renderTeamsModal(); saveData();
+}
+
 // ── Assign ────────────────────────────────────────────────
 function randomAssign() {
     resetCourts();
@@ -871,29 +938,81 @@ function randomAssign() {
         .sort((a,b)=>a.score-b.score).map(x=>x.p);
 
     const toAssign = genderAwareSelect(avail, courtCount*4);
+    const arranged = arrangeTeams(toAssign);
+    fixAvoidConflicts(arranged);
 
-    if (settings.levelBalance) {
-        for (let ci=0;ci<courtCount;ci++) {
-            const grp = toAssign.slice(ci*4, ci*4+4);
-            if (grp.length===4) {
-                grp.sort((a,b)=>b.level-a.level);
-                toAssign[ci*4]=grp[0]; toAssign[ci*4+1]=grp[3];
-                toAssign[ci*4+2]=grp[1]; toAssign[ci*4+3]=grp[2];
-            }
-        }
-    }
-
-    applyPairConstraints(toAssign);
-
-    let idx=0;
     for (let ci=0;ci<courtCount;ci++)
         for (let si=0;si<4;si++) {
-            if (idx>=toAssign.length) break;
-            courts[ci][si]=toAssign[idx].id; toAssign[idx].onCourt=true; idx++;
+            const p = arranged[ci*4+si];
+            if (p) { courts[ci][si]=p.id; p.onCourt=true; }
         }
 
     render(); saveData();
     toast('✅ 隨機排場完成');
+}
+
+// 將本輪選出的球員組成兩人一組（固定搭檔 > 同隊隊友 > 等級高低配），
+// 再兩組排一個場地，對面優先安排不同隊的組合
+function arrangeTeams(selected) {
+    const used = new Set();
+    const duos = [];
+
+    pairs.filter(pr=>pr.type==='together').forEach(pr=>{
+        const a = selected.find(p=>p.id===pr.ids[0] && !used.has(p.id));
+        const b = selected.find(p=>p.id===pr.ids[1] && !used.has(p.id));
+        if (a&&b) { used.add(a.id); used.add(b.id); duos.push({m:[a,b], team:a.team===b.team?a.team:''}); }
+    });
+
+    const byTeam = {};
+    selected.forEach(p=>{ if(!used.has(p.id)&&p.team) (byTeam[p.team]=byTeam[p.team]||[]).push(p); });
+    Object.entries(byTeam).forEach(([t,list])=>{
+        if (settings.levelBalance) list.sort((a,b)=>b.level-a.level);
+        while (list.length>=2) {
+            const a=list.shift(), b=settings.levelBalance?list.pop():list.shift();
+            used.add(a.id); used.add(b.id);
+            duos.push({m:[a,b], team:t});
+        }
+    });
+
+    let rest = selected.filter(p=>!used.has(p.id));
+    if (settings.levelBalance) rest.sort((a,b)=>b.level-a.level);
+    while (rest.length>=2) {
+        const a=rest.shift(), b=settings.levelBalance?rest.pop():rest.shift();
+        duos.push({m:[a,b], team:''});
+    }
+    if (rest.length) duos.push({m:[rest.shift()], team:''});
+
+    const flat = [];
+    while (duos.length) {
+        const first = duos.shift();
+        let oi = first.team ? duos.findIndex(d=>d.team!==first.team) : 0;
+        if (oi===-1) oi = 0;
+        const second = duos.length ? duos.splice(oi,1)[0] : null;
+        flat.push(first.m[0]||null, first.m[1]||null,
+                  second ? (second.m[0]||null) : null,
+                  second ? (second.m[1]||null) : null);
+    }
+    return flat;
+}
+
+function fixAvoidConflicts(flat) {
+    const courtOf = id => {
+        for (let ci=0;ci<courtCount;ci++)
+            if (flat.slice(ci*4,ci*4+4).some(p=>p&&p.id===id)) return ci;
+        return -1;
+    };
+    const sideOf = (ci,id) => flat.slice(ci*4,ci*4+2).some(p=>p&&p.id===id) ? 0 : 1;
+    pairs.filter(pr=>pr.type==='avoid').forEach(pr=>{
+        const ci = courtOf(pr.ids[0]);
+        if (ci===-1 || ci!==courtOf(pr.ids[1])) return;
+        if (sideOf(ci,pr.ids[0])===sideOf(ci,pr.ids[1])) return; // 兩人在同一組（設定衝突），略過
+        for (let o=1;o<courtCount;o++) {
+            const oc=(ci+o)%courtCount;
+            if (!flat[oc*4+2] && !flat[oc*4+3]) continue;
+            for (let k=2;k<4;k++){ const t=flat[ci*4+k]; flat[ci*4+k]=flat[oc*4+k]; flat[oc*4+k]=t; }
+            break;
+        }
+    });
 }
 
 function genderAwareSelect(avail, total) {
@@ -917,32 +1036,6 @@ function genderAwareSelect(avail, total) {
     return result.slice(0, total);
 }
 
-function applyPairConstraints(arr) {
-    const courtOf = id => {
-        for (let ci=0;ci<courtCount;ci++) {
-            const start=ci*4;
-            if (arr.slice(start,start+4).some(p=>p&&p.id===id)) return ci;
-        }
-        return -1;
-    };
-    pairs.forEach(pr => {
-        const [id1,id2] = pr.ids;
-        const ci1=courtOf(id1), ci2=courtOf(id2);
-        if (ci1===-1||ci2===-1) return;
-        if (pr.type==='together' && ci1!==ci2) {
-            const idx2 = arr.findIndex(p=>p&&p.id===id2);
-            const slot1end = (ci1+1)*4;
-            const swap = arr.slice(ci1*4, slot1end).findIndex(p=>p&&p.id!==id1);
-            if (swap>=0 && idx2>=0) { const tmp=arr[ci1*4+swap]; arr[ci1*4+swap]=arr[idx2]; arr[idx2]=tmp; }
-        }
-        if (pr.type==='avoid' && ci1===ci2) {
-            const idx2 = arr.findIndex(p=>p&&p.id===id2);
-            const otherStart = (ci1===courtCount-1?0:ci1+1)*4;
-            if (otherStart!==ci1*4 && arr[otherStart]) { const tmp=arr[otherStart]; arr[otherStart]=arr[idx2]; arr[idx2]=tmp; }
-        }
-    });
-}
-
 function toggleManual() {
     manualMode = !manualMode;
     toast(manualMode?'✋ 點擊空格指定球員，點已排球員可移除':'手動模式關閉');
@@ -963,6 +1056,7 @@ function openModal() {
     document.getElementById('modalChips').innerHTML=avail.length
         ?avail.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
             ${p.name}
+            ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
             <span style="font-size:0.75em;font-weight:600;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
             <span style="font-size:0.75em;color:#999">${p.playCount}場</span>
           </div>`).join('')
@@ -984,7 +1078,9 @@ function saveBatch() {
         const parts=line.split(',').map(s=>s.trim());
         const name=parts[0];
         if (!name||players.find(p=>p.name===name)){skipped++;return;}
-        players.push({id:nextId++,name,gender:GENDER_MAP[parts[1]]||'m',level:LEVEL_MAP[parts[2]]??0,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:''});
+        let team=(parts[3]||'').replace(/隊$/,'').toUpperCase();
+        if (!TEAM_NAMES.includes(team)) team='';
+        players.push({id:nextId++,name,gender:GENDER_MAP[parts[1]]||'m',level:LEVEL_MAP[parts[2]]??0,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:'',team});
         added++;
     });
     document.getElementById('batchText').value='';
@@ -1082,8 +1178,8 @@ function clearHistory() {
 
 function exportData() {
     let txt = '=== 球員名單 ===\n';
-    txt += '姓名,性別,等級,場數\n';
-    players.forEach(p=>{ txt+=`${p.name},${p.gender==='m'?'男':'女'},${LEVELS[p.level]},${p.playCount}\n`; });
+    txt += '姓名,性別,等級,隊伍,場數\n';
+    players.forEach(p=>{ txt+=`${p.name},${p.gender==='m'?'男':'女'},${LEVELS[p.level]},${p.team||''},${p.playCount}\n`; });
     txt += '\n=== 對戰紀錄 ===\n';
     matchRecords.forEach(r=>{
         const d=new Date(r.ts);
@@ -1155,11 +1251,12 @@ function renderCourts() {
 function slot(ci,si,pid) {
     const p=pid?players.find(x=>x.id===pid):null;
     const gc=p?(p.gender==='m'?'male':'female'):'';
+    const lv = p ? `${p.team?`${p.team}隊・`:''}${LEVELS[p.level]}` : '';
     if (manualMode) {
-        if (p) return `<div class="slot filled manual-filled ${gc}" onclick="slotClick(${ci},${si})"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`;
+        if (p) return `<div class="slot filled manual-filled ${gc}" onclick="slotClick(${ci},${si})"><span>${p.name}</span><span class="slot-level">${lv}</span></div>`;
         return `<div class="slot manual-empty" onclick="slotClick(${ci},${si})">＋ 選擇</div>`;
     }
-    return p?`<div class="slot filled ${gc}"><span>${p.name}</span><span class="slot-level">${LEVELS[p.level]}</span></div>`:`<div class="slot">－</div>`;
+    return p?`<div class="slot filled ${gc}"><span>${p.name}</span><span class="slot-level">${lv}</span></div>`:`<div class="slot">－</div>`;
 }
 
 function renderWaiting() {
@@ -1168,6 +1265,7 @@ function renderWaiting() {
     document.getElementById('waitList').innerHTML=w.length
         ?w.map(p=>`<div class="chip ${p.gender==='m'?'male':'female'}">
             <span>${p.name}</span>
+            ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
             <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
             <span class="chip-count">${p.playCount}</span>
             <span class="chip-btn" onclick="toggleRest(${p.id})" title="休息">💤</span>
@@ -1189,6 +1287,7 @@ function renderPlayers() {
     document.getElementById('playerList').innerHTML=players.length
         ?players.map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'} ${p.attending?'':'absent'}">
             <span>${p.name}</span>
+            ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
             <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
             ${p.note?`<span class="chip-note" title="${p.note}">📝</span>`:''}
             <span class="chip-count">${p.playCount}</span>
@@ -1209,7 +1308,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── App update check ─────────────────────────────────────
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1.0';
 const VERSION_URL = 'https://dmc4nero7482-commits.github.io/Badminton/version.json';
 
 function isNewerVersion(serverVer, currentVer) {
@@ -1268,12 +1367,16 @@ function startDownload(url) {
 
 function startScoring(ci) {
     const c = courts[ci];
-    const getNames = pids => pids.map(pid => {
-        const p = pid ? players.find(x=>x.id===pid) : null;
-        return p ? p.name : null;
-    }).filter(Boolean).join('/');
-    const teamA = getNames([c[0],c[1]]) || '隊伍A';
-    const teamB = getNames([c[2],c[3]]) || '隊伍B';
+    const getPlayers = pids => pids.map(pid => pid ? players.find(x=>x.id===pid) : null).filter(Boolean);
+    const sideName = pids => {
+        const ps = getPlayers(pids);
+        if (!ps.length) return '';
+        const names = ps.map(p=>p.name).join('/');
+        // 兩人同隊時，隊名一起帶給記分板
+        return (ps[0].team && ps.every(p=>p.team===ps[0].team)) ? `${ps[0].team}隊 ${names}` : names;
+    };
+    const teamA = sideName([c[0],c[1]]) || '隊伍A';
+    const teamB = sideName([c[2],c[3]]) || '隊伍B';
     if (window.AndroidScoreboard) {
         window.AndroidScoreboard.openScoreboard(teamA, teamB);
     } else {
@@ -1398,7 +1501,7 @@ const TUT_STEPS = [
     {
         icon: '⏭',
         title: '結束本輪，開始下一輪',
-        body: '打完一輪後，按 <span class="tut-tag">⏭ 下一輪</span>：<br><br>① 自動記錄本輪對戰名單<br>② 更新每位球員的場次計數<br>③ 清空場地並重新排場<br><br>按 <span class="tut-tag">🔗</span> 可設定<b>固定搭檔</b>或<b>迴避配對</b>的關係'
+        body: '打完一輪後，按 <span class="tut-tag">⏭ 下一輪</span>：<br><br>① 自動記錄本輪對戰名單<br>② 更新每位球員的場次計數<br>③ 清空場地並重新排場<br><br>按 <span class="tut-tag">🔗</span> 可設定<b>固定搭檔</b>或<b>迴避配對</b>，按 <span class="tut-tag">🏷️</span> 可將多位球員<b>分到同一隊</b>，排場時同隊會排在同一邊'
     },
     {
         icon: '✋',

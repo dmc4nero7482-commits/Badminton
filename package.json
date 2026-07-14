@@ -1,0 +1,10 @@
+{
+  "name": "badminton",
+  "version": "1.0.0",
+  "description": "羽毛球排場系統",
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
