@@ -417,7 +417,7 @@
                     <option value="2">中階</option><option value="3">中進</option>
                     <option value="4">高階</option><option value="5">職業</option>
                 </select>
-                <select id="teamSelect">
+                <select id="teamSelect" onchange="showTeamMembers(this.value)">
                     <option value="">無隊伍</option>
                     <option value="A">A隊</option><option value="B">B隊</option>
                     <option value="C">C隊</option><option value="D">D隊</option>
@@ -426,6 +426,7 @@
                 <button class="btn btn-primary" onclick="addPlayer()">新增</button>
                 <button class="btn btn-outline" onclick="openBatch()">批量</button>
             </div>
+            <div id="teamMembersHint" style="display:none;font-size:0.82em;color:var(--text-light);line-height:1.6;padding:2px 2px 0"></div>
         </div>
     </div>
 </div>
@@ -800,7 +801,17 @@ function addPlayer() {
     const team = document.getElementById('teamSelect').value;
     players.push({id:nextId++, name, gender:selectedGender, level, playCount:0, onCourt:false, resting:false, waitRounds:0, attending:true, note:'', team});
     inp.value = '';
+    showTeamMembers(team); // 立即更新隊員提示，方便連續補人
     render(); saveData();
+}
+
+// 在新增表單選了隊伍後，顯示該隊目前的隊員名單
+function showTeamMembers(t) {
+    const el = document.getElementById('teamMembersHint');
+    if (!t) { el.style.display='none'; return; }
+    const members = players.filter(p=>p.team===t).map(p=>p.name);
+    el.style.display='block';
+    el.innerHTML = `<span style="color:${TEAM_COLORS[t]};font-weight:700">${t}隊（${members.length} 人）</span>：${members.length?members.join('、'):'目前沒有隊員'}`;
 }
 
 function removePlayer(id) {
@@ -850,10 +861,10 @@ function openAttendance() {
 function closeAttendance() { document.getElementById('attendanceOverlay').classList.remove('show'); }
 
 function renderAttendanceList() {
-    document.getElementById('attendanceList').innerHTML = players.map(p => `
+    document.getElementById('attendanceList').innerHTML = sortByTeam(players).map(p => `
         <div class="attend-chip ${tempAttendance[p.id]?'present':'absent-mark'}"
              onclick="toggleTempAttend(${p.id})">
-            ${tempAttendance[p.id]?'✓':''} ${p.name}
+            ${tempAttendance[p.id]?'✓':''} ${p.name}${p.team?` <span style="font-size:0.78em;font-weight:700;color:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
         </div>`).join('');
 }
 
@@ -1089,7 +1100,7 @@ function slotClick(ci, si) {
 function openModal() {
     const {ci,si}=pendingSlot;
     document.getElementById('modalTitle').textContent=`場地 ${ci+1}・${si<2?'A 隊':'B 隊'}・位置 ${(si%2)+1}`;
-    const avail=players.filter(p=>!p.onCourt&&!p.resting&&p.attending);
+    const avail=sortByTeam(players.filter(p=>!p.onCourt&&!p.resting&&p.attending));
     document.getElementById('modalChips').innerHTML=avail.length
         ?avail.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
             ${p.name}
@@ -1336,6 +1347,15 @@ function saveSettings() {
 }
 
 // ── Render ────────────────────────────────────────────────
+// 依隊伍排序（A→F 依序，無隊伍排最後；同隊維持原順序），讓同隊球員顯示在一起
+function sortByTeam(arr, thenBy) {
+    return [...arr].sort((a,b)=>{
+        const ta=a.team||'￿', tb=b.team||'￿';
+        if (ta!==tb) return ta<tb?-1:1;
+        return thenBy ? thenBy(a,b) : 0;
+    });
+}
+
 function render() {
     document.getElementById('courtNum').textContent=courtCount;
     document.getElementById('manualBtn').className='btn btn-outline'+(manualMode?' active':'');
@@ -1374,7 +1394,7 @@ function slot(ci,si,pid) {
 }
 
 function renderWaiting() {
-    const w=players.filter(p=>!p.onCourt&&!p.resting&&p.attending).sort((a,b)=>a.playCount-b.playCount);
+    const w=sortByTeam(players.filter(p=>!p.onCourt&&!p.resting&&p.attending), (a,b)=>a.playCount-b.playCount);
     document.getElementById('waitBadge').textContent=w.length;
     document.getElementById('waitList').innerHTML=w.length
         ?w.map(p=>`<div class="chip ${p.gender==='m'?'male':'female'}">
@@ -1399,7 +1419,7 @@ function renderResting() {
 function renderPlayers() {
     document.getElementById('playerBadge').textContent=players.length;
     document.getElementById('playerList').innerHTML=players.length
-        ?players.map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'} ${p.attending?'':'absent'}">
+        ?sortByTeam(players).map(p=>`<div class="chip ${p.onCourt?'playing':''} ${p.gender==='m'?'male':'female'} ${p.attending?'':'absent'}">
             <span>${p.name}</span>
             ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
             <span class="chip-level" style="background:${LEVEL_COLORS[p.level]}22;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
@@ -1422,7 +1442,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── App update check ─────────────────────────────────────
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.5';
 const VERSION_URL = 'https://dmc4nero7482-commits.github.io/Badminton/version.json';
 
 function isNewerVersion(serverVer, currentVer) {
