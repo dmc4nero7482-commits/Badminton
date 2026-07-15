@@ -1125,10 +1125,9 @@ function renderBatchRows() {
 function addBatchRow() {
     batchRows.push(emptyBatchRow());
     renderBatchRows();
+    // 只捲動到底讓新列可見，不自動聚焦，避免手機一直彈出鍵盤
     const rows = document.getElementById('batchRows');
     rows.scrollTop = rows.scrollHeight;
-    const inputs = rows.querySelectorAll('input');
-    inputs[inputs.length-1].focus();
 }
 
 // 在名字格貼上多行/逗號分隔的名單時，自動展開填入多列（相容舊格式：姓名,性別,等級,隊伍）
