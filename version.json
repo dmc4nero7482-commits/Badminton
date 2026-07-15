@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
-  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.1.1/badminton-debug.apk",
-  "note": "批量新增改為選單式，輸入名字即可"
+  "version": "1.1.2",
+  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.1.2/badminton-debug.apk",
+  "note": "防止誤刪球員：刪除前需確認"
 }
