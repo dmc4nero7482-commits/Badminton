@@ -1,5 +1,4 @@
 node_modules/
-android/
 www/
 package-lock.json
 *.apk
