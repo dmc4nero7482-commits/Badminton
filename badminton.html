@@ -112,9 +112,9 @@
         .chip.absent { opacity: 0.4; }
         .chip-count { background: #bdbdbd; color: white; border-radius: 10px; padding: 1px 7px; font-size: 0.78em; }
         .chip-level { font-size: 0.72em; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-        .chip-btn { font-size: 0.9em; line-height: 1; cursor: pointer; opacity: 0.55; transition: opacity 0.15s; }
+        .chip-btn { font-size: 0.9em; line-height: 1; cursor: pointer; opacity: 0.55; transition: opacity 0.15s; padding: 5px; margin: -3px 0; }
         .chip-btn:hover { opacity: 1; }
-        .chip-remove { color: #bdbdbd; font-size: 1.1em; line-height: 1; cursor: pointer; transition: color 0.15s; }
+        .chip-remove { color: #bdbdbd; font-size: 1.1em; line-height: 1; cursor: pointer; transition: color 0.15s; padding: 5px 6px; margin: -3px -4px -3px 4px; border-left: 1px solid var(--border); }
         .chip-remove:hover { color: var(--danger); }
         .chip-note { font-size: 0.72em; color: var(--text-light); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .empty-hint { color: var(--text-light); font-size: 0.9em; padding: 6px 0; }
@@ -800,7 +800,9 @@ function addPlayer() {
 
 function removePlayer(id) {
     const p = players.find(p=>p.id===id);
-    if (p&&p.onCourt) { toast('請先將球員從場地移除'); return; }
+    if (!p) return;
+    if (p.onCourt) { toast('請先將球員從場地移除'); return; }
+    if (!confirm(`確定移除球員「${p.name}」？`)) return;
     players = players.filter(p=>p.id!==id);
     courts.forEach(c=>{for(let i=0;i<4;i++) if(c[i]===id) c[i]=null;});
     pairs = pairs.filter(pr=>!pr.ids.includes(id));
@@ -1396,7 +1398,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── App update check ─────────────────────────────────────
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 const VERSION_URL = 'https://dmc4nero7482-commits.github.io/Badminton/version.json';
 
 function isNewerVersion(serverVer, currentVer) {
