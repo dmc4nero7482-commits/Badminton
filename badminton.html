@@ -249,6 +249,10 @@
 
         /* Batch */
         .batch-hint { font-size: 0.8em; color: var(--text-light); margin-bottom: 10px; line-height: 1.7; }
+        .batch-row { display: grid; grid-template-columns: 1fr 56px 72px 62px; gap: 6px; align-items: center; margin-bottom: 6px; }
+        .batch-row select { border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 2px; font-size: 0.82em; background: var(--card); color: var(--text); width: 100%; }
+        .batch-row .batch-name { font-size: 0.9em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .batch-apply { padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
         .batch-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.88em; font-family: inherit; resize: vertical; min-height: 160px; outline: none; background: var(--card); color: var(--text); }
         .batch-textarea:focus { border-color: var(--primary); }
 
@@ -454,11 +458,37 @@
 <div class="overlay" id="batchOverlay" onclick="if(event.target.id==='batchOverlay')closeBatch()">
     <div class="modal">
         <h3>批量新增球員</h3>
-        <p class="batch-hint">格式：姓名,性別,等級,隊伍（每行一筆，隊伍選填）<br>性別：男 / 女　　等級：新手 / 初中 / 中階 / 中進 / 高階 / 職業　　隊伍：A ~ F</p>
-        <textarea class="batch-textarea" id="batchText" placeholder="小明,男,初中,A&#10;小華,女,新手,A&#10;小李,男,中階,B"></textarea>
-        <div class="modal-btns">
-            <button class="btn btn-outline" onclick="closeBatch()">取消</button>
-            <button class="btn btn-primary" onclick="saveBatch()">新增</button>
+        <div id="batchStep1">
+            <p class="batch-hint">每行輸入一位球員姓名，下一步再用選單設定性別、等級、隊伍<br>（也相容舊格式：姓名,性別,等級,隊伍）</p>
+            <textarea class="batch-textarea" id="batchText" placeholder="小明&#10;小華&#10;小李"></textarea>
+            <div class="modal-btns">
+                <button class="btn btn-outline" onclick="closeBatch()">取消</button>
+                <button class="btn btn-primary" onclick="batchNext()">下一步</button>
+            </div>
+        </div>
+        <div id="batchStep2" style="display:none">
+            <p class="batch-hint">逐一設定每位球員，或用第一列一次套用到全部</p>
+            <div class="batch-row batch-apply">
+                <span style="font-size:0.82em;font-weight:700;color:var(--text-light)">套用全部 →</span>
+                <select id="allGender" onchange="batchApplyAll('gender',this.value)">
+                    <option value="">性別</option><option value="m">男</option><option value="f">女</option>
+                </select>
+                <select id="allLevel" onchange="batchApplyAll('level',this.value)">
+                    <option value="">等級</option>
+                    <option value="0">新手</option><option value="1">初中</option><option value="2">中階</option>
+                    <option value="3">中進</option><option value="4">高階</option><option value="5">職業</option>
+                </select>
+                <select id="allTeam" onchange="batchApplyAll('team',this.value)">
+                    <option value="">隊伍</option><option value="none">無</option>
+                    <option value="A">A隊</option><option value="B">B隊</option><option value="C">C隊</option>
+                    <option value="D">D隊</option><option value="E">E隊</option><option value="F">F隊</option>
+                </select>
+            </div>
+            <div id="batchRows" style="max-height:44vh;overflow-y:auto"></div>
+            <div class="modal-btns">
+                <button class="btn btn-outline" onclick="batchBack()">上一步</button>
+                <button class="btn btn-primary" onclick="confirmBatch()">確認新增</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1068,19 +1098,77 @@ function closeModal() { document.getElementById('overlay').classList.remove('sho
 function overlayClick(e) { if(e.target.id==='overlay') closeModal(); }
 
 // ── Batch ─────────────────────────────────────────────────
-function openBatch() { document.getElementById('batchOverlay').classList.add('show'); }
+let batchRows = [];
+
+function openBatch() {
+    document.getElementById('batchStep1').style.display='block';
+    document.getElementById('batchStep2').style.display='none';
+    document.getElementById('batchOverlay').classList.add('show');
+}
 function closeBatch() { document.getElementById('batchOverlay').classList.remove('show'); }
 
-function saveBatch() {
+function batchNext() {
     const lines=document.getElementById('batchText').value.trim().split('\n').map(l=>l.trim()).filter(Boolean);
-    let added=0,skipped=0;
+    if (!lines.length) { toast('請先輸入球員姓名'); return; }
+    batchRows = [];
     lines.forEach(line=>{
-        const parts=line.split(',').map(s=>s.trim());
-        const name=parts[0];
-        if (!name||players.find(p=>p.name===name)){skipped++;return;}
-        let team=(parts[3]||'').replace(/隊$/,'').toUpperCase();
-        if (!TEAM_NAMES.includes(team)) team='';
-        players.push({id:nextId++,name,gender:GENDER_MAP[parts[1]]||'m',level:LEVEL_MAP[parts[2]]??0,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:'',team});
+        const parts=line.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+        if (parts.length>1 && GENDER_MAP[parts[1]]!==undefined) {
+            // 舊格式：姓名,性別,等級,隊伍
+            let team=(parts[3]||'').replace(/隊$/,'').toUpperCase();
+            if (!TEAM_NAMES.includes(team)) team='';
+            batchRows.push({name:parts[0], gender:GENDER_MAP[parts[1]], level:LEVEL_MAP[parts[2]]??0, team});
+        } else {
+            // 純名字（同一行用逗號分隔多個也可以）
+            parts.forEach(name=>batchRows.push({name, gender:'m', level:0, team:''}));
+        }
+    });
+    ['allGender','allLevel','allTeam'].forEach(id=>document.getElementById(id).value='');
+    renderBatchRows();
+    document.getElementById('batchStep1').style.display='none';
+    document.getElementById('batchStep2').style.display='block';
+}
+
+function batchBack() {
+    document.getElementById('batchStep2').style.display='none';
+    document.getElementById('batchStep1').style.display='block';
+}
+
+function renderBatchRows() {
+    document.getElementById('batchRows').innerHTML = batchRows.map((r,i)=>`
+        <div class="batch-row">
+            <span class="batch-name" style="color:${r.gender==='m'?'var(--male-text)':'var(--female-text)'}">${r.name}</span>
+            <select onchange="setBatchRow(${i},'gender',this.value)">
+                <option value="m"${r.gender==='m'?' selected':''}>男</option>
+                <option value="f"${r.gender==='f'?' selected':''}>女</option>
+            </select>
+            <select onchange="setBatchRow(${i},'level',this.value)">
+                ${LEVELS.map((lv,li)=>`<option value="${li}"${r.level===li?' selected':''}>${lv}</option>`).join('')}
+            </select>
+            <select onchange="setBatchRow(${i},'team',this.value)">
+                <option value="">無</option>
+                ${TEAM_NAMES.map(t=>`<option value="${t}"${r.team===t?' selected':''}>${t}隊</option>`).join('')}
+            </select>
+        </div>`).join('');
+}
+
+function setBatchRow(i, key, val) {
+    batchRows[i][key] = key==='level' ? parseInt(val) : val;
+    if (key==='gender') renderBatchRows();
+}
+
+function batchApplyAll(key, val) {
+    if (val==='') return;
+    const v = key==='level' ? parseInt(val) : (val==='none' ? '' : val);
+    batchRows.forEach(r=>r[key]=v);
+    renderBatchRows();
+}
+
+function confirmBatch() {
+    let added=0,skipped=0;
+    batchRows.forEach(r=>{
+        if (!r.name||players.find(p=>p.name===r.name)){skipped++;return;}
+        players.push({id:nextId++,name:r.name,gender:r.gender,level:r.level,team:r.team,playCount:0,onCourt:false,resting:false,waitRounds:0,attending:true,note:''});
         added++;
     });
     document.getElementById('batchText').value='';
@@ -1308,7 +1396,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── App update check ─────────────────────────────────────
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 const VERSION_URL = 'https://dmc4nero7482-commits.github.io/Badminton/version.json';
 
 function isNewerVersion(serverVer, currentVer) {
