@@ -208,6 +208,7 @@
         .team-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
         .team-btn { padding: 7px 14px; border-radius: 8px; border: 2px solid var(--border); background: var(--card); font-size: 0.9em; font-weight: 700; cursor: pointer; transition: all 0.15s; }
         .chip-team { font-size: 0.72em; padding: 1px 7px; border-radius: 8px; font-weight: 700; color: white; }
+        .tf-btn { padding: 5px 12px; border-radius: 16px; border: 1.5px solid var(--border); background: var(--card); color: var(--text-light); font-size: 0.85em; font-weight: 700; cursor: pointer; transition: all 0.15s; }
 
         /* Settings */
         .settings-group { margin-bottom: 18px; }
@@ -442,6 +443,7 @@
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
     <div class="modal">
         <h3 id="modalTitle">選擇球員</h3>
+        <div class="team-picker" id="modalTeamFilter"></div>
         <div class="modal-chips" id="modalChips"></div>
         <div class="modal-btns"><button class="btn btn-outline" onclick="closeModal()">取消</button></div>
     </div>
@@ -1097,19 +1099,40 @@ function slotClick(ci, si) {
     else { pendingSlot={ci,si}; openModal(); }
 }
 
+let modalTeamFilter = ''; // 記住上次選的隊伍篩選，連續指定同隊球員時不用重選
+
 function openModal() {
     const {ci,si}=pendingSlot;
     document.getElementById('modalTitle').textContent=`場地 ${ci+1}・${si<2?'A 隊':'B 隊'}・位置 ${(si%2)+1}`;
+    renderModalChips();
+    document.getElementById('overlay').classList.add('show');
+}
+
+function setModalTeamFilter(t) { modalTeamFilter = t; renderModalChips(); }
+
+function renderModalChips() {
     const avail=sortByTeam(players.filter(p=>!p.onCourt&&!p.resting&&p.attending));
-    document.getElementById('modalChips').innerHTML=avail.length
-        ?avail.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
+    const teams = TEAM_NAMES.filter(t=>avail.some(p=>p.team===t));
+    const hasNone = avail.some(p=>!p.team);
+    // 篩選目標已無可選球員時自動跳回「全部」
+    if (modalTeamFilter==='none' ? !hasNone : (modalTeamFilter && !teams.includes(modalTeamFilter))) modalTeamFilter='';
+
+    // 完全沒有分隊時不顯示篩選列
+    document.getElementById('modalTeamFilter').innerHTML = teams.length
+        ? `<button class="tf-btn" style="${modalTeamFilter===''?'background:var(--primary);border-color:var(--primary);color:white':''}" onclick="setModalTeamFilter('')">全部</button>`
+          + teams.map(t=>`<button class="tf-btn" style="${modalTeamFilter===t?`background:${TEAM_COLORS[t]};border-color:${TEAM_COLORS[t]};color:white`:`color:${TEAM_COLORS[t]};border-color:${TEAM_COLORS[t]}66`}" onclick="setModalTeamFilter('${t}')">${t}隊</button>`).join('')
+          + (hasNone?`<button class="tf-btn" style="${modalTeamFilter==='none'?'background:#757575;border-color:#757575;color:white':''}" onclick="setModalTeamFilter('none')">無隊</button>`:'')
+        : '';
+
+    const shown = !modalTeamFilter ? avail : avail.filter(p=>modalTeamFilter==='none' ? !p.team : p.team===modalTeamFilter);
+    document.getElementById('modalChips').innerHTML=shown.length
+        ?shown.map(p=>`<div class="mchip ${p.gender==='m'?'male':'female'}" onclick="pickPlayer(${p.id})">
             ${p.name}
             ${p.team?`<span class="chip-team" style="background:${TEAM_COLORS[p.team]}">${p.team}</span>`:''}
             <span style="font-size:0.75em;font-weight:600;color:${LEVEL_COLORS[p.level]}">${LEVELS[p.level]}</span>
             <span style="font-size:0.75em;color:#999">${p.playCount}場</span>
           </div>`).join('')
         :'<span class="empty-hint">沒有可用的球員</span>';
-    document.getElementById('overlay').classList.add('show');
 }
 function pickPlayer(id) { courts[pendingSlot.ci][pendingSlot.si]=id; setOnCourt(id,true); closeModal(); render(); saveData(); }
 function closeModal() { document.getElementById('overlay').classList.remove('show'); }
