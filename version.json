@@ -1,5 +1,5 @@
 {
-  "version": "1.1.2",
-  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.1.2/badminton-debug.apk",
-  "note": "防止誤刪球員：刪除前需確認；批量新增改為列表式，名字＋下拉選單逐列設定"
+  "version": "1.1.3",
+  "download": "https://github.com/dmc4nero7482-commits/Badminton/releases/download/v1.1.3/badminton-debug.apk",
+  "note": "批量新增：每列可刪除、一鍵清空全部"
 }
